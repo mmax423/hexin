@@ -116,15 +116,24 @@
   }
 
   const STICKY_COLORS = ['pink', 'yellow', 'blue', 'green', 'lavender'];
+  // 没有记录坐标的旧便签按"边缘环形"分布，避免每次渲染乱跳
+  function fallbackPos(i) {
+    const zones = [[10, 14], [84, 18], [16, 70], [80, 66], [50, 8], [46, 82], [6, 44], [90, 46]];
+    const z = zones[i % zones.length];
+    return { x: z[0] + (i >= zones.length ? (i % 5) * 2 : 0), y: z[1] + (i >= zones.length ? (i % 3) * 4 : 0) };
+  }
   function renderStickers() {
-    const box = $('#stickyWall'); if (!box) return;
+    const box = $('#stickyLayer'); if (!box) return;
     box.innerHTML = '';
     const list = Store.getStickers();
     const today = todayISO();
     list.forEach((s, i) => {
       const el = document.createElement('div');
       const color = STICKY_COLORS.includes(s.color) ? s.color : 'pink';
+      const pos = (s.x != null && s.y != null) ? { x: s.x, y: s.y } : fallbackPos(i);
       el.className = 'sticky ' + color + (s.date === today ? '' : ' expired');
+      el.style.setProperty('--x', pos.x + '%');
+      el.style.setProperty('--y', pos.y + '%');
       el.style.animationDelay = (i * 0.04) + 's';
       el.innerHTML = `<span class='s-text'>${esc(s.text)}</span><button class='del' title='删除'>×</button>`;
       el.querySelector('.del').addEventListener('click', (e) => {
@@ -142,12 +151,25 @@
     if (btn) btn.hidden = open;
     if (open && $('#stickyText')) $('#stickyText').focus();
   }
+  // 在背景的"安全区"随机取点：避开正中（合心/天数）区域，偏向左右边缘与上下角
+  function pickStickyPos() {
+    const safe = [
+      [0.04, 0.10, 0.30, 0.40], [0.68, 0.10, 0.94, 0.40],
+      [0.06, 0.62, 0.32, 0.90], [0.66, 0.62, 0.92, 0.90],
+      [0.34, 0.04, 0.62, 0.10]
+    ];
+    const r = safe[Math.floor(Math.random() * safe.length)];
+    const x = +(r[0] + Math.random() * (r[2] - r[0])).toFixed(2);
+    const y = +(r[1] + Math.random() * (r[3] - r[1])).toFixed(2);
+    return { x: Math.round(x * 100), y: Math.round(y * 100) };
+  }
   async function saveSticky() {
     const text = $('#stickyText').value.trim();
     if (!text) { toast('便签写点什么'); return; }
     const btn = $('#stickySaveBtn'); const old = btn.textContent; btn.textContent = '贴上…';
     try {
-      await Store.addSticker({ text, color: state.stickyColor, date: todayISO() });
+      const pos = pickStickyPos();
+      await Store.addSticker({ text, color: state.stickyColor, date: todayISO(), x: pos.x, y: pos.y });
       $('#stickyText').value = ''; toggleStickyForm(false); toast('便签已贴上'); renderAll();
     } catch (e) { toast('保存失败：' + (e.message || '请重试')); }
     finally { btn.textContent = old; }

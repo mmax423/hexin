@@ -67,6 +67,7 @@
     LS.set('wd_notes', cache.notes);
     LS.set('wd_places', cache.places);
     LS.set('wd_love', cache.love);
+    LS.set('wd_stickers', cache.stickers);
   }
 
   /* ---------- 地点类型（图标集） ---------- */
@@ -88,6 +89,7 @@
     notes: [],
     places: [],
     love: [],
+    stickers: [],
     settings: { nameA: '', nameB: '', since: '2026-03-27' }
   };
   let loaded = false;
@@ -97,11 +99,12 @@
   function rowToNote(r) { return { id: r.id || r._id, createdAt: Number(r.createdAt) || 0, text: r.text || '', images: r.images || [] }; }
   function rowToPlace(r) { return { id: r.id || r._id, createdAt: Number(r.createdAt) || 0, date: r.date || '', name: r.name || '', address: r.address || '', lat: r.lat, lng: r.lng, note: r.note || '', cat: r.cat || 'other', images: r.images || [] }; }
   function rowToLove(r) { return { id: r.id || r._id, createdAt: Number(r.createdAt) || 0, date: r.date || '', title: r.title || '', mood: r.mood || '', content: r.content || '', images: r.images || [] }; }
+  function rowToSticker(r) { return { id: r.id || r._id, createdAt: Number(r.createdAt) || 0, date: r.date || '', text: r.text || '', color: r.color || 'pink' }; }
 
   /* ---------- 鉴权（无登录，密码由前端校验） ---------- */
   const auth = {
     async signIn() { return { user: {} }; },
-    async signOut() { loaded = false; cache.diary = []; cache.notes = []; cache.places = []; cache.love = []; },
+    async signOut() { loaded = false; cache.diary = []; cache.notes = []; cache.places = []; cache.love = []; cache.stickers = []; },
     async currentUser() { return {}; },
     onChange() { /* 无登录态变化 */ }
   };
@@ -113,13 +116,14 @@
     useLocal = !useCloud;
 
     if (useCloud) {
-      const [d, n, p, lo, s] = await Promise.all([
-        netGet('diary'), netGet('notes'), netGet('places'), netGet('love'), netGet('settings')
+      const [d, n, p, lo, st, s] = await Promise.all([
+        netGet('diary'), netGet('notes'), netGet('places'), netGet('love'), netGet('stickers'), netGet('settings')
       ]);
       cache.diary = (Array.isArray(d) ? d : []).map(rowToDiary).sort((a, b) => b.createdAt - a.createdAt);
       cache.notes = (Array.isArray(n) ? n : []).map(rowToNote).sort((a, b) => b.createdAt - a.createdAt);
       cache.places = (Array.isArray(p) ? p : []).map(rowToPlace).sort((a, b) => b.createdAt - a.createdAt);
       cache.love = (Array.isArray(lo) ? lo : []).map(rowToLove).sort((a, b) => b.createdAt - a.createdAt);
+      cache.stickers = (Array.isArray(st) ? st : []).map(rowToSticker).sort((a, b) => b.createdAt - a.createdAt);
       const sd = (s && typeof s === 'object') ? s : null;
       cache.settings = sd ? { nameA: sd.nameA || '', nameB: sd.nameB || '', since: sd.since || '2026-03-27' }
                             : { nameA: '', nameB: '', since: '2026-03-27' };
@@ -129,6 +133,7 @@
       cache.notes = LS.get('wd_notes', []);
       cache.places = LS.get('wd_places', []);
       cache.love = LS.get('wd_love', []);
+      cache.stickers = LS.get('wd_stickers', []);
     }
     loaded = true;
   }
@@ -172,6 +177,27 @@
   async function removeNote(id) {
     cache.notes = cache.notes.filter((e) => e.id !== id);
     if (useCloud) await netSet('notes', cache.notes); else persistLocal();
+  }
+
+  /* ---------- 便签 ---------- */
+  function getStickers() { return cache.stickers; }
+  async function addSticker(e) {
+    e.id = uid('s'); e.createdAt = Date.now();
+    if (!e.date) e.date = new Date().toISOString().slice(0, 10);
+    if (!e.color) e.color = 'pink';
+    cache.stickers.unshift(Object.assign({}, e));
+    if (useCloud) await netSet('stickers', cache.stickers); else persistLocal();
+    return e;
+  }
+  async function updateSticker(id, patch) {
+    const i = cache.stickers.findIndex((e) => e.id === id); if (i < 0) return null;
+    cache.stickers[i] = Object.assign({}, cache.stickers[i], patch);
+    if (useCloud) await netSet('stickers', cache.stickers); else persistLocal();
+    return cache.stickers[i];
+  }
+  async function removeSticker(id) {
+    cache.stickers = cache.stickers.filter((e) => e.id !== id);
+    if (useCloud) await netSet('stickers', cache.stickers); else persistLocal();
   }
 
   /* ---------- 私爱 ---------- */
@@ -250,7 +276,7 @@
 
   /* ---------- 备份 / 恢复（图片已内联，无需独立图片集合） ---------- */
   async function exportAll() {
-    return { app: 'our-diary', version: 4, exportedAt: new Date().toISOString(), settings: getSettings(), diary: cache.diary, notes: cache.notes, places: cache.places, love: cache.love };
+    return { app: 'our-diary', version: 5, exportedAt: new Date().toISOString(), settings: getSettings(), diary: cache.diary, notes: cache.notes, places: cache.places, love: cache.love, stickers: cache.stickers };
   }
   async function importAll(data) {
     if (!data || data.app !== 'our-diary') throw new Error('不是有效的备份文件');
@@ -258,11 +284,12 @@
     cache.notes = (data.notes || []).map((e) => Object.assign({}, e));
     cache.places = (data.places || []).map((e) => Object.assign({}, e));
     cache.love = (data.love || []).map((e) => Object.assign({}, e));
+    cache.stickers = (data.stickers || []).map((e) => Object.assign({}, e));
     if (data.settings) cache.settings = Object.assign({ nameA: '', nameB: '', since: '2026-03-27' }, data.settings);
     if (useCloud) {
       await Promise.all([
         netSet('diary', cache.diary), netSet('notes', cache.notes),
-        netSet('places', cache.places), netSet('love', cache.love), netSet('settings', cache.settings)
+        netSet('places', cache.places), netSet('love', cache.love), netSet('stickers', cache.stickers), netSet('settings', cache.settings)
       ]);
     } else {
       persistLocal();
@@ -270,11 +297,11 @@
     await loadAll();
   }
   async function resetAll() {
-    cache.diary = []; cache.notes = []; cache.places = []; cache.love = [];
+    cache.diary = []; cache.notes = []; cache.places = []; cache.love = []; cache.stickers = [];
     cache.settings = { nameA: '', nameB: '', since: '2026-03-27' };
     if (useCloud) {
       await Promise.all([
-        netSet('diary', []), netSet('notes', []), netSet('places', []), netSet('love', []), netSet('settings', cache.settings)
+        netSet('diary', []), netSet('notes', []), netSet('places', []), netSet('love', []), netSet('stickers', []), netSet('settings', cache.settings)
       ]);
     } else {
       persistLocal();
@@ -302,6 +329,7 @@
     getSettings, saveSettings,
     getDiary, addDiary, updateDiary, removeDiary,
     getNotes, addNote, removeNote,
+    getStickers, addSticker, updateSticker, removeSticker,
     getLove, addLove, updateLove, removeLove,
     getPlaces, addPlace, updatePlace, removePlace,
     getImageURL,

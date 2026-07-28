@@ -178,45 +178,7 @@ body.authed .auth-mask{display:none}
 @keyframes floaty{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-7px) rotate(-3deg)}}
 @keyframes glowPulse{0%,100%{box-shadow:0 0 0 4px rgba(255,255,255,.7),0 10px 28px rgba(210,123,160,.3)}50%{box-shadow:0 0 0 6px rgba(255,255,255,.85),0 10px 38px rgba(210,123,160,.5)}}
 
-/* ===== 动效增强：漂浮爱心 / 入场错落 / 按压反馈 / 心跳 ===== */
-@keyframes floatUp{
-  0%{transform:translateY(0) rotate(0);opacity:0}
-  8%{opacity:.85}
-  100%{transform:translateY(-108vh) rotate(48deg);opacity:0}
-}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes heartBeat{0%,100%{transform:scale(1)}30%{transform:scale(1.28)}45%{transform:scale(.92)}65%{transform:scale(1.12)}}
-@keyframes wiggle{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
-
-/* 漂浮爱心层（置于内容之下，不挡操作） */
-.floats{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-.floats span{position:absolute;bottom:-40px;opacity:0;animation-name:floatUp;animation-timing-function:linear;animation-iteration-count:infinite;will-change:transform,opacity;text-shadow:0 0 10px rgba(210,123,160,.35)}
-.nav,.container{position:relative;z-index:1}
-
-/* 日记卡片入场错落（保留胶带倾斜，仅做淡入） */
-.entry{animation:fadeIn .55s both}
-.entry:nth-child(1){animation-delay:.04s}
-.entry:nth-child(2){animation-delay:.10s}
-.entry:nth-child(3){animation-delay:.16s}
-.entry:nth-child(4){animation-delay:.22s}
-.entry:nth-child(5){animation-delay:.28s}
-.entry:nth-child(6){animation-delay:.34s}
-.entry:nth-child(7){animation-delay:.40s}
-.entry:nth-child(8){animation-delay:.46s}
-.entry:nth-child(n+9){animation-delay:.52s}
-
-/* 按压反馈 */
-.link.strong:active,.cat-chip:active,.cal-nav:active{transform:scale(.92);transition:transform .08s}
-.x:active{transform:rotate(90deg) scale(.9)}
-
-/* 封面头像悬停轻晃 + 在一起天数心跳 */
-.cover-avatar:hover{animation:wiggle 1.1s ease-in-out infinite}
-.cover-days{animation:heartBeat 3.2s ease-in-out infinite,breathe 4.5s ease-in-out infinite}
-
-@media (prefers-reduced-motion:reduce){
-  .cover-avatar,.auth-avatar,.floats span,.cover-days{animation:none!important}
-  .entry{animation:none}
-}
+@media (prefers-reduced-motion:reduce){.cover-avatar,.auth-avatar{animation:none}}
 
 .index-list{margin-top:50px;border-top:1px dashed var(--line)}
 .index-row{display:flex;align-items:baseline;justify-content:space-between;padding:22px 4px;border-bottom:1px dashed var(--line);text-decoration:none;color:var(--ink);transition:padding-left .35s,background .35s,box-shadow .35s;cursor:pointer}

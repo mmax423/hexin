@@ -180,9 +180,17 @@ body.authed .auth-mask{display:none}
 .cover-center{flex:1;min-width:280px;max-width:460px;text-align:center;padding-top:10px}
 
 /* 左侧：今日喜事（放大） */
-.joy-panel{width:320px;flex-shrink:0;background:var(--card);background-image:var(--grain);border:1px solid var(--line);border-radius:4px;box-shadow:0 3px 0 rgba(160,100,120,.06),0 18px 42px rgba(160,100,120,.18);padding:20px 18px 18px;position:relative}
+.joy-panel{position:absolute;top:40px;left:18px;z-index:5;width:320px;flex-shrink:0;background:var(--card);background-image:var(--grain);border:1px solid var(--line);border-radius:4px;box-shadow:0 3px 0 rgba(160,100,120,.06),0 18px 42px rgba(160,100,120,.18);padding:20px 18px 18px;user-select:none}
+.joy-panel.dragging{box-shadow:0 8px 0 rgba(160,100,120,.08),0 28px 60px rgba(160,100,120,.28);cursor:grabbing}
 .joy-panel::before{content:"";position:absolute;top:-10px;left:28px;width:62px;height:18px;transform:rotate(-3deg);background:var(--tape);border-left:1px dashed rgba(255,255,255,.6);border-right:1px dashed rgba(255,255,255,.6);box-shadow:0 2px 5px rgba(160,100,120,.12)}
-.joy-head{font-family:var(--latin);font-size:14px;letter-spacing:.18em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:14px;text-align:center}
+.joy-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:var(--latin);font-size:14px;letter-spacing:.18em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:14px;text-align:center;cursor:grab;touch-action:none}
+.joy-head:active{cursor:grabbing}
+.joy-title{flex:1;text-align:left;pointer-events:none}
+.joy-hide{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.6);color:var(--ink-soft);font-size:15px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background .2s,color .2s,transform .2s}
+.joy-hide:hover{background:var(--accent);color:#fff;transform:scale(1.08)}
+.joy-reopen{position:absolute;top:40px;right:18px;z-index:5;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);background-image:var(--grain);color:var(--accent-deep);font-family:var(--hand);font-size:15px;letter-spacing:.08em;padding:9px 16px;border-radius:30px;cursor:pointer;box-shadow:0 3px 0 rgba(160,100,120,.06),0 14px 34px rgba(160,100,120,.2);transition:transform .2s,box-shadow .2s}
+.joy-reopen:hover{transform:translateY(-2px) rotate(-1deg);box-shadow:0 6px 0 rgba(160,100,120,.06),0 20px 44px rgba(160,100,120,.28)}
+.joy-reopen[hidden]{display:none}
 .joy-text{width:100%;min-height:130px;resize:none;border:1px dashed var(--line);border-radius:2px;background:rgba(255,255,255,.55);padding:12px;font-family:var(--serif);font-size:15px;color:var(--ink);line-height:1.8}
 /* 今日喜事 与 便签 之间的分隔 */
 .joy-divider{display:flex;align-items:center;gap:10px;margin:18px 0 14px;color:var(--muted);font-family:var(--latin);font-size:12px;letter-spacing:.16em;text-transform:uppercase}
@@ -251,7 +259,7 @@ body.mgmt .sticky .del{display:flex}
 
 @media (max-width:900px){
   .cover-main{flex-direction:column;align-items:center;gap:28px}
-  .joy-panel{width:min(100%,360px)}
+  .joy-panel{left:8px;width:min(calc(100vw - 16px),360px)}
   .cover-center{order:-1;width:100%}
 }
 

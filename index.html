@@ -16,7 +16,7 @@
 <body>
   <!-- 未连接云端时的安全提示（仅本地模式出现，部署前请先配置 config.js） -->
   <div class="local-warn" id="localWarn" hidden>
-    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-07-27-ghpages-v5]</b></span>
+    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-07-27-ghpages-v6]</b></span>
     <button id="localWarnClose" aria-label="关闭">×</button>
   </div>
   <script>
@@ -38,6 +38,17 @@
     <span class="orb a"></span>
     <span class="orb b"></span>
     <span class="orb c"></span>
+  </div>
+
+  <!-- 漂浮的爱心 / 小花（纯装饰动效，不影响操作） -->
+  <div class="floats" aria-hidden="true">
+    <span style="left:8%;font-size:20px;animation-duration:15s;animation-delay:0s;color:var(--accent)">♥</span>
+    <span style="left:22%;font-size:14px;animation-duration:19s;animation-delay:3s;color:var(--accent-deep)">✿</span>
+    <span style="left:37%;font-size:24px;animation-duration:17s;animation-delay:6s;color:var(--accent)">♥</span>
+    <span style="left:51%;font-size:12px;animation-duration:21s;animation-delay:1.5s;color:var(--accent-deep)">✿</span>
+    <span style="left:64%;font-size:18px;animation-duration:16s;animation-delay:8s;color:var(--accent)">♥</span>
+    <span style="left:78%;font-size:22px;animation-duration:20s;animation-delay:4s;color:var(--accent-deep)">✿</span>
+    <span style="left:90%;font-size:15px;animation-duration:18s;animation-delay:11s;color:var(--accent)">♥</span>
   </div>
 
   <!-- ========== 登录遮罩 ========== -->

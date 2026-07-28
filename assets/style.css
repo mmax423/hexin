@@ -13,6 +13,43 @@
   font-display:swap;
   src:url('fonts/MaShanZheng-Regular.woff2') format('woff2');
 }
+/* 欧式浪漫手写 Great Vibes：自托管，用于英文装饰（不支持中文，仅英文/数字）。 */
+@font-face{
+  font-family:'Great Vibes';
+  font-style:normal;
+  font-weight:400;
+  font-display:swap;
+  src:url('fonts/GreatVibes-Regular.woff2') format('woff2');
+}
+/* 古典衬线 Cormorant Garamond：自托管，用于英文正文/数字/日期（不支持中文）。 */
+@font-face{
+  font-family:'Cormorant Garamond';
+  font-style:normal;
+  font-weight:400;
+  font-display:swap;
+  src:url('fonts/CormorantGaramond-Regular.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Cormorant Garamond';
+  font-style:normal;
+  font-weight:500;
+  font-display:swap;
+  src:url('fonts/CormorantGaramond-Medium.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Cormorant Garamond';
+  font-style:normal;
+  font-weight:600;
+  font-display:swap;
+  src:url('fonts/CormorantGaramond-SemiBold.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Cormorant Garamond';
+  font-style:normal;
+  font-weight:700;
+  font-display:swap;
+  src:url('fonts/CormorantGaramond-Bold.woff2') format('woff2');
+}
 :root{
   --paper:#FDF7F9;        /* 米白纸 */
   --paper-2:#F7E8ED;      /* 牛皮纸浅 */
@@ -30,7 +67,8 @@
   --card:#FFF9FB;         /* 纸卡 */
   --serif:'Noto Serif SC',serif;
   --sans:'Noto Sans SC',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
-  --latin:'Cormorant Garamond',serif;
+  --latin:'Cormorant Garamond','Noto Serif SC',serif;   /* 英文/数字：自托管古典衬线 */
+  --romantic:'Great Vibes','Cormorant Garamond',cursive; /* 英文浪漫手写装饰 */
   --hand:'Ma Shan Zheng','Noto Serif SC',cursive;
   --maxw:760px;
   --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='table' tableValues='0 0.05'/></feComponentTransfer></filter><rect width='180' height='180' filter='url(%23n)'/></svg>");
@@ -118,7 +156,9 @@ body.authed .auth-mask{display:none}
 
 /* 封面 —— 手账扉页 */
 .cover{text-align:center;padding:60px 0 40px}
-.cover-label{font-family:var(--latin);letter-spacing:.5em;font-size:13px;color:var(--ink-soft);text-transform:uppercase;margin-bottom:22px;padding-left:.5em;animation:fadeUp .8s .15s both}
+.cover-label{font-family:var(--romantic);letter-spacing:.02em;font-size:34px;line-height:1;color:var(--accent);margin-bottom:14px;animation:fadeUp .8s .15s both}
+/* 封面英文浪漫短句（Cormorant 斜体，欧式信笺感） */
+.cover-en{font-family:var(--latin);font-style:italic;font-weight:500;font-size:19px;color:var(--ink-soft);letter-spacing:.04em;margin:10px 0 0}
 .cover-title-row{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap}
 .cover-avatar{height:72px;width:auto;object-fit:contain;animation:floaty 5.5s ease-in-out infinite;background:#fff;padding:5px;border:1px dashed var(--line);box-shadow:0 4px 12px rgba(160,100,120,.18);transform:rotate(-3deg)}
 .cover-names{font-family:var(--hand);font-weight:400;font-size:48px;letter-spacing:.1em;color:var(--ink);animation:fadeUp .8s .25s both}

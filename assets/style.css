@@ -163,16 +163,94 @@ body.authed .auth-mask{display:none}
 .local-warn[hidden]{display:none}
 
 /* 封面 —— 手账扉页 */
-.cover{text-align:center;padding:60px 0 40px}
+.cover{padding:50px 16px 40px}
 .cover-label{font-family:var(--romantic);letter-spacing:.02em;font-size:34px;line-height:1;color:var(--accent);margin-bottom:14px;animation:fadeUp .8s .15s both}
 /* 封面英文浪漫短句（Cormorant 斜体，欧式信笺感） */
 .cover-en{font-family:var(--latin);font-style:italic;font-weight:500;font-size:19px;color:var(--ink-soft);letter-spacing:.04em;margin:10px 0 0}
 .cover-title-row{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap}
 .cover-avatar{height:72px;width:auto;object-fit:contain;animation:floaty 5.5s ease-in-out infinite;background:#fff;padding:5px;border:1px dashed var(--line);box-shadow:0 4px 12px rgba(160,100,120,.18);transform:rotate(-3deg)}
 .cover-names{font-family:var(--hand);font-weight:400;font-size:48px;letter-spacing:.1em;color:var(--ink);animation:fadeUp .8s .25s both}
-.cover-days{font-family:var(--latin);font-size:64px;line-height:1;margin:28px 0 6px;font-weight:500;color:var(--accent-deep);animation:breathe 4.5s ease-in-out infinite}
-.cover-days small{font-family:var(--sans);font-size:15px;letter-spacing:.2em;color:var(--ink-soft);margin-left:8px}
+.cover-days{font-family:var(--latin);font-size:64px;line-height:1;margin:28px 0 6px;font-weight:500;color:var(--accent-deep);animation:breathe 4.5s ease-in-out infinite;display:flex;align-items:baseline;justify-content:center;gap:8px;flex-wrap:wrap}
+.cover-days small{font-family:var(--sans);font-size:22px;letter-spacing:.12em;color:var(--ink-soft);margin:0 4px 0 2px}
+.cover-days .timer{font-size:26px;letter-spacing:.06em;color:var(--ink-soft);opacity:.9}
 .cover-sub{color:var(--ink-soft);font-size:14px;letter-spacing:.06em;margin-top:6px;animation:fadeUp .8s .35s both}
+
+/* ===== 封面三栏布局：今日喜事 | 中心 | 便签墙 ===== */
+.cover-main{display:flex;align-items:flex-start;justify-content:center;gap:22px;max-width:1120px;margin:0 auto}
+.cover-center{flex:1;min-width:280px;max-width:420px;text-align:center;padding-top:10px}
+
+/* 左侧：今日喜事 */
+.joy-panel{width:250px;flex-shrink:0;background:var(--card);background-image:var(--grain);border:1px solid var(--line);border-radius:4px;box-shadow:0 2px 0 rgba(160,100,120,.05),0 14px 34px rgba(160,100,120,.14);padding:18px 16px 16px;position:relative}
+.joy-panel::before{content:"";position:absolute;top:-10px;left:24px;width:56px;height:18px;transform:rotate(-3deg);background:var(--tape);border-left:1px dashed rgba(255,255,255,.6);border-right:1px dashed rgba(255,255,255,.6);box-shadow:0 2px 5px rgba(160,100,120,.12)}
+.joy-head,.wall-head{font-family:var(--latin);font-size:13px;letter-spacing:.18em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:14px;text-align:center}
+.joy-text{width:100%;min-height:90px;resize:none;border:1px dashed var(--line);border-radius:2px;background:rgba(255,255,255,.55);padding:10px;font-family:var(--serif);font-size:14px;color:var(--ink);line-height:1.7}
+.joy-text::placeholder{color:var(--muted)}
+.joy-tools{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:8px}
+.joy-img{background:none;border:none;font-size:20px;cursor:pointer;opacity:.75;transition:opacity .2s,transform .2s;line-height:1;padding:2px}
+.joy-img:hover{opacity:1;transform:scale(1.1)}
+.joy-save{background:var(--accent);color:#fff;border:none;border-radius:2px;padding:7px 14px;font-family:var(--sans);font-size:12px;letter-spacing:.08em;cursor:pointer;box-shadow:0 2px 6px rgba(210,123,160,.35);transition:background .2s,transform .15s}
+.joy-save:hover{background:var(--accent-deep)}
+.joy-save:active{transform:scale(.96)}
+.joy-preview{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+.joy-preview img{height:54px;width:54px;object-fit:cover;border:3px solid #fff;box-shadow:0 3px 8px rgba(160,100,120,.22);transform:rotate(-2deg)}
+
+/* 右侧：便签墙（浅木色墙面） */
+.wall-panel{width:260px;flex-shrink:0;border-radius:4px;padding:16px 14px 14px;position:relative;background-color:#F4EBD9;background-image:repeating-linear-gradient(90deg,rgba(170,150,120,.08) 0 1px,transparent 1px 42px),repeating-linear-gradient(0deg,rgba(170,150,120,.06) 0 1px,transparent 1px 28px),linear-gradient(160deg,#FAF3E8 0%,#EDE4D0 100%);box-shadow:inset 0 0 28px rgba(130,110,80,.12),0 4px 14px rgba(90,58,69,.1);border:6px solid #E9DCC4}
+.wall{display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start;min-height:190px;padding:4px;max-height:320px;overflow:auto}
+.wall-add{width:100%;margin-top:12px;background:rgba(255,255,255,.45);border:1px dashed var(--line-soft);color:var(--ink-soft);border-radius:2px;padding:8px;font-family:var(--sans);font-size:12px;letter-spacing:.08em;cursor:pointer;transition:background .2s,color .2s}
+.wall-add:hover{background:rgba(255,255,255,.75);color:var(--ink)}
+
+/* 便签 */
+.sticky{width:96px;min-height:96px;padding:12px 10px 10px;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;font-family:var(--hand);font-size:15px;line-height:1.45;color:var(--ink);box-shadow:2px 3px 9px rgba(0,0,0,.12);cursor:pointer;transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s ease;word-break:break-word}
+.sticky::before{content:"";position:absolute;top:-7px;left:50%;width:32px;height:12px;transform:translateX(-50%);background:rgba(255,255,255,.55);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.sticky:nth-child(odd){transform:rotate(-2.5deg)}
+.sticky:nth-child(even){transform:rotate(1.5deg)}
+.sticky:nth-child(3n){transform:rotate(2deg)}
+.sticky:nth-child(5n){transform:rotate(-1.5deg)}
+.sticky:hover{transform:scale(1.08) rotate(0);z-index:5;box-shadow:4px 8px 18px rgba(0,0,0,.18)}
+.sticky.pink{background:#FFD1DC}
+.sticky.yellow{background:#FFF5BA}
+.sticky.blue{background:#D4F0FF}
+.sticky.green{background:#D9EAD3}
+.sticky.lavender{background:#E6E6FA}
+.s-text{transition:opacity .3s ease,transform .3s cubic-bezier(.2,.8,.2,1)}
+
+/* 过期便签：灰色网格 + 褪色模糊；hover 渐显放大，文字冒出 */
+.sticky.expired{opacity:.42;filter:grayscale(.85) saturate(.18) blur(.7px)}
+.sticky.expired::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle,rgba(120,120,120,.45) 1px,transparent 1px);background-size:7px 7px;pointer-events:none}
+.sticky.expired .s-text{opacity:0;transform:translateY(12px)}
+.sticky.expired:hover{opacity:1;filter:none}
+.sticky.expired:hover .s-text{opacity:1;transform:translateY(0)}
+
+/* 新增便签表单 */
+.sticky-form{margin-top:12px;background:rgba(255,255,255,.72);border:1px dashed var(--line);border-radius:2px;padding:10px}
+.sticky-input{width:100%;min-height:56px;resize:none;border:none;background:transparent;padding:4px;font-family:var(--serif);font-size:13px;color:var(--ink);line-height:1.6}
+.sticky-colors{display:flex;gap:8px;margin:8px 0}
+.sticky-colors .col{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .15s}
+.sticky-colors .col:hover{transform:scale(1.15)}
+.sticky-colors .col.sel{box-shadow:0 0 0 2px var(--ink-soft)}
+.sticky-colors .col.pink{background:#FFD1DC}
+.sticky-colors .col.yellow{background:#FFF5BA}
+.sticky-colors .col.blue{background:#D4F0FF}
+.sticky-colors .col.green{background:#D9EAD3}
+.sticky-colors .col.lavender{background:#E6E6FA}
+.sticky-actions{display:flex;justify-content:flex-end;gap:10px;align-items:center}
+
+/* 便签删除按钮（编辑模式下显示） */
+.sticky .del{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background:var(--accent-deep);color:#fff;border:none;font-size:13px;line-height:1;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .15s}
+.sticky .del:hover{transform:scale(1.15)}
+body.mgmt .sticky .del{display:flex}
+
+/* 今日喜事预览图删除 */
+.joy-preview{position:relative}
+.joy-preview .rm{position:absolute;top:-5px;left:44px;width:18px;height:18px;border-radius:50%;background:var(--accent-deep);color:#fff;border:none;font-size:12px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+
+@media (max-width:900px){
+  .cover-main{flex-direction:column;align-items:center;gap:28px}
+  .joy-panel,.wall-panel{width:min(100%,420px)}
+  .cover-center{order:-1;width:100%}
+}
+
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @keyframes breathe{0%,100%{text-shadow:0 0 14px rgba(210,123,160,.2)}50%{text-shadow:0 0 26px rgba(210,123,160,.4)}}
 @keyframes floaty{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-7px) rotate(-3deg)}}

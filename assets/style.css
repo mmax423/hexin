@@ -163,7 +163,7 @@ body.authed .auth-mask{display:none}
 .local-warn[hidden]{display:none}
 
 /* 封面 —— 手账扉页 */
-.cover{padding:50px 16px 40px}
+.cover{position:relative;padding:50px 16px 40px}
 .cover-label{font-family:var(--romantic);letter-spacing:.02em;font-size:34px;line-height:1;color:var(--accent);margin-bottom:14px;animation:fadeUp .8s .15s both}
 /* 封面英文浪漫短句（Cormorant 斜体，欧式信笺感） */
 .cover-en{font-family:var(--latin);font-style:italic;font-weight:500;font-size:19px;color:var(--ink-soft);letter-spacing:.04em;margin:10px 0 0}
@@ -175,15 +175,18 @@ body.authed .auth-mask{display:none}
 .cover-days .timer{font-size:26px;letter-spacing:.06em;color:var(--ink-soft);opacity:.9}
 .cover-sub{color:var(--ink-soft);font-size:14px;letter-spacing:.06em;margin-top:6px;animation:fadeUp .8s .35s both}
 
-/* ===== 封面三栏布局：今日喜事 | 中心 | 便签墙 ===== */
-.cover-main{display:flex;align-items:flex-start;justify-content:center;gap:22px;max-width:1120px;margin:0 auto}
-.cover-center{flex:1;min-width:280px;max-width:420px;text-align:center;padding-top:10px}
+/* ===== 封面布局：今日喜事 | 中心（便签直接贴背景） ===== */
+.cover-main{display:flex;align-items:flex-start;justify-content:center;gap:34px;max-width:1120px;margin:0 auto;position:relative;z-index:2}
+.cover-center{flex:1;min-width:280px;max-width:460px;text-align:center;padding-top:10px}
 
-/* 左侧：今日喜事 */
-.joy-panel{width:250px;flex-shrink:0;background:var(--card);background-image:var(--grain);border:1px solid var(--line);border-radius:4px;box-shadow:0 2px 0 rgba(160,100,120,.05),0 14px 34px rgba(160,100,120,.14);padding:18px 16px 16px;position:relative}
-.joy-panel::before{content:"";position:absolute;top:-10px;left:24px;width:56px;height:18px;transform:rotate(-3deg);background:var(--tape);border-left:1px dashed rgba(255,255,255,.6);border-right:1px dashed rgba(255,255,255,.6);box-shadow:0 2px 5px rgba(160,100,120,.12)}
-.joy-head,.wall-head{font-family:var(--latin);font-size:13px;letter-spacing:.18em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:14px;text-align:center}
-.joy-text{width:100%;min-height:90px;resize:none;border:1px dashed var(--line);border-radius:2px;background:rgba(255,255,255,.55);padding:10px;font-family:var(--serif);font-size:14px;color:var(--ink);line-height:1.7}
+/* 左侧：今日喜事（放大） */
+.joy-panel{width:320px;flex-shrink:0;background:var(--card);background-image:var(--grain);border:1px solid var(--line);border-radius:4px;box-shadow:0 3px 0 rgba(160,100,120,.06),0 18px 42px rgba(160,100,120,.18);padding:20px 18px 18px;position:relative}
+.joy-panel::before{content:"";position:absolute;top:-10px;left:28px;width:62px;height:18px;transform:rotate(-3deg);background:var(--tape);border-left:1px dashed rgba(255,255,255,.6);border-right:1px dashed rgba(255,255,255,.6);box-shadow:0 2px 5px rgba(160,100,120,.12)}
+.joy-head{font-family:var(--latin);font-size:14px;letter-spacing:.18em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:14px;text-align:center}
+.joy-text{width:100%;min-height:130px;resize:none;border:1px dashed var(--line);border-radius:2px;background:rgba(255,255,255,.55);padding:12px;font-family:var(--serif);font-size:15px;color:var(--ink);line-height:1.8}
+/* 今日喜事 与 便签 之间的分隔 */
+.joy-divider{display:flex;align-items:center;gap:10px;margin:18px 0 14px;color:var(--muted);font-family:var(--latin);font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+.joy-divider::before,.joy-divider::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent)}
 .joy-text::placeholder{color:var(--muted)}
 .joy-tools{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:8px}
 .joy-img{background:none;border:none;font-size:20px;cursor:pointer;opacity:.75;transition:opacity .2s,transform .2s;line-height:1;padding:2px}
@@ -194,20 +197,21 @@ body.authed .auth-mask{display:none}
 .joy-preview{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
 .joy-preview img{height:54px;width:54px;object-fit:cover;border:3px solid #fff;box-shadow:0 3px 8px rgba(160,100,120,.22);transform:rotate(-2deg)}
 
-/* 右侧：便签墙（浅木色墙面） */
-.wall-panel{width:260px;flex-shrink:0;border-radius:4px;padding:16px 14px 14px;position:relative;background-color:#F4EBD9;background-image:repeating-linear-gradient(90deg,rgba(170,150,120,.08) 0 1px,transparent 1px 42px),repeating-linear-gradient(0deg,rgba(170,150,120,.06) 0 1px,transparent 1px 28px),linear-gradient(160deg,#FAF3E8 0%,#EDE4D0 100%);box-shadow:inset 0 0 28px rgba(130,110,80,.12),0 4px 14px rgba(90,58,69,.1);border:6px solid #E9DCC4}
-.wall{display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start;min-height:190px;padding:4px;max-height:320px;overflow:auto}
-.wall-add{width:100%;margin-top:12px;background:rgba(255,255,255,.45);border:1px dashed var(--line-soft);color:var(--ink-soft);border-radius:2px;padding:8px;font-family:var(--sans);font-size:12px;letter-spacing:.08em;cursor:pointer;transition:background .2s,color .2s}
-.wall-add:hover{background:rgba(255,255,255,.75);color:var(--ink)}
+/* 便签直接贴到背景上的浮层（在内容之下、背景之上，不挡操作） */
+.sticky-layer{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 
-/* 便签 */
-.sticky{width:96px;min-height:96px;padding:12px 10px 10px;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;font-family:var(--hand);font-size:15px;line-height:1.45;color:var(--ink);box-shadow:2px 3px 9px rgba(0,0,0,.12);cursor:pointer;transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s ease;word-break:break-word}
-.sticky::before{content:"";position:absolute;top:-7px;left:50%;width:32px;height:12px;transform:translateX(-50%);background:rgba(255,255,255,.55);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+/* 贴便签入口（已并入今日喜事面板） */
+.wall-add{width:100%;margin-top:4px;background:rgba(255,255,255,.5);border:1px dashed var(--line-soft);color:var(--ink-soft);border-radius:2px;padding:9px;font-family:var(--sans);font-size:12px;letter-spacing:.08em;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
+.wall-add:hover{background:rgba(255,255,255,.82);color:var(--ink);box-shadow:0 3px 10px rgba(160,100,120,.16)}
+
+/* 便签：绝对定位到背景，自带多层柔和阴影，像真的贴在墙上 */
+.sticky{position:absolute;left:var(--x,8%);top:var(--y,12%);width:108px;min-height:108px;padding:14px 12px 12px;display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--hand);font-size:16px;line-height:1.45;color:var(--ink);cursor:pointer;pointer-events:auto;transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .3s ease,box-shadow .35s ease;word-break:break-word;box-shadow:3px 6px 14px rgba(120,90,100,.22),0 1px 2px rgba(0,0,0,.1)}
+.sticky::before{content:"";position:absolute;top:-7px;left:50%;width:34px;height:13px;transform:translateX(-50%) rotate(-2deg);background:rgba(255,255,255,.6);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .sticky:nth-child(odd){transform:rotate(-2.5deg)}
 .sticky:nth-child(even){transform:rotate(1.5deg)}
 .sticky:nth-child(3n){transform:rotate(2deg)}
 .sticky:nth-child(5n){transform:rotate(-1.5deg)}
-.sticky:hover{transform:scale(1.08) rotate(0);z-index:5;box-shadow:4px 8px 18px rgba(0,0,0,.18)}
+.sticky:hover{transform:scale(1.08) rotate(0);z-index:6;box-shadow:7px 14px 30px rgba(120,90,100,.32),0 2px 5px rgba(0,0,0,.14)}
 .sticky.pink{background:#FFD1DC}
 .sticky.yellow{background:#FFF5BA}
 .sticky.blue{background:#D4F0FF}
@@ -247,7 +251,7 @@ body.mgmt .sticky .del{display:flex}
 
 @media (max-width:900px){
   .cover-main{flex-direction:column;align-items:center;gap:28px}
-  .joy-panel,.wall-panel{width:min(100%,420px)}
+  .joy-panel{width:min(100%,360px)}
   .cover-center{order:-1;width:100%}
 }
 

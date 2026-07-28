@@ -703,6 +703,49 @@
     finally { e.target.value = ''; }
   }
 
+  /* ---------- 今日喜事面板：拖拽 + 位置记忆 + 收起 ---------- */
+  function applyJoyPos() {
+    const p = $('#joyPanel'); if (!p) return;
+    try {
+      const raw = localStorage.getItem('hexin_joy_pos');
+      if (raw) { const o = JSON.parse(raw); if (o && o.l != null) { p.style.left = o.l; p.style.top = o.t; p.style.right = 'auto'; } }
+    } catch (e) {}
+  }
+  function saveJoyPos() {
+    const p = $('#joyPanel'); if (!p) return;
+    try { localStorage.setItem('hexin_joy_pos', JSON.stringify({ l: p.style.left, t: p.style.top })); } catch (e) {}
+  }
+  function makeJoyDraggable() {
+    const p = $('#joyPanel'); if (!p) return;
+    const handle = p.querySelector('.joy-head'); if (!handle) return;
+    let dragging = false, sx = 0, sy = 0, ol = 0, ot = 0;
+    handle.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('button')) return;
+      dragging = true;
+      const pr = p.getBoundingClientRect(), cr = p.offsetParent.getBoundingClientRect();
+      ol = pr.left - cr.left; ot = pr.top - cr.top; sx = e.clientX; sy = e.clientY;
+      p.style.left = ol + 'px'; p.style.top = ot + 'px'; p.style.right = 'auto';
+      p.classList.add('dragging'); handle.style.cursor = 'grabbing';
+      try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+      e.preventDefault();
+    });
+    handle.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const cr = p.offsetParent.getBoundingClientRect(), pr = p.getBoundingClientRect();
+      let nl = ol + (e.clientX - sx), nt = ot + (e.clientY - sy);
+      nl = Math.max(0, Math.min(nl, cr.width - pr.width));
+      nt = Math.max(0, Math.min(nt, cr.height - pr.height));
+      p.style.left = nl + 'px'; p.style.top = nt + 'px';
+    });
+    const end = (e) => {
+      if (!dragging) return; dragging = false; p.classList.remove('dragging'); handle.style.cursor = '';
+      try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
+      saveJoyPos();
+    };
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+  }
+
   /* ---------- 统一渲染 ---------- */
   function renderAll() {
     renderCover(); renderDiary(); renderNotes(); renderPlaces();
@@ -736,6 +779,10 @@
     $('#joyFile').addEventListener('change', (e) => { onJoyFiles(e.target.files); e.target.value = ''; });
     $('#joySaveBtn').addEventListener('click', saveJoy);
     $('#joyText').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') saveJoy(); });
+    $('#joyHide').addEventListener('click', () => { const p = $('#joyPanel'); if (p) p.style.display = 'none'; $('#joyReopen').hidden = false; });
+    $('#joyReopen').addEventListener('click', () => { const p = $('#joyPanel'); if (p) p.style.display = ''; $('#joyReopen').hidden = true; });
+    makeJoyDraggable();
+    applyJoyPos();
 
     /* 便签墙 */
     $('#stickyAddBtn').addEventListener('click', () => toggleStickyForm(true));

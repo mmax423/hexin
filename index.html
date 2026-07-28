@@ -16,7 +16,7 @@
 <body>
   <!-- 未连接云端时的安全提示（仅本地模式出现，部署前请先配置 config.js） -->
   <div class="local-warn" id="localWarn" hidden>
-    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-07-27-ghpages-v8]</b></span>
+    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-07-27-ghpages-v9]</b></span>
     <button id="localWarnClose" aria-label="关闭">×</button>
   </div>
   <script>
@@ -84,8 +84,11 @@
     <!-- ========== 封面 ========== -->
     <section class="view active" id="view-index">
       <div class="cover">
+        <!-- 便签直接贴到背景上的浮层（在内容之下、背景之上） -->
+        <div class="sticky-layer" id="stickyLayer" aria-hidden="true"></div>
+
         <div class="cover-main">
-          <!-- 左侧：今日喜事 -->
+          <!-- 左侧：今日喜事（放大） -->
           <div class="joy-panel">
             <div class="joy-head">今日喜事</div>
             <div class="joy-body">
@@ -96,6 +99,22 @@
               </div>
               <input type="file" id="joyFile" accept="image/*" hidden>
               <div class="joy-preview" id="joyPreview"></div>
+            </div>
+            <div class="joy-divider"><span>便签 · 随手贴</span></div>
+            <button class="wall-add" id="stickyAddBtn">+ 贴一张便签</button>
+            <div class="sticky-form" id="stickyForm" hidden>
+              <textarea id="stickyText" class="sticky-input" placeholder="写张便签，会直接贴到背景上…" maxlength="70"></textarea>
+              <div class="sticky-colors">
+                <button data-color="pink" class="col pink sel" aria-label="粉色"></button>
+                <button data-color="yellow" class="col yellow" aria-label="黄色"></button>
+                <button data-color="blue" class="col blue" aria-label="蓝色"></button>
+                <button data-color="green" class="col green" aria-label="绿色"></button>
+                <button data-color="lavender" class="col lavender" aria-label="紫色"></button>
+              </div>
+              <div class="sticky-actions">
+                <button class="link" id="stickyCancel">取消</button>
+                <button class="joy-save" id="stickySaveBtn">贴上</button>
+              </div>
             </div>
           </div>
 
@@ -109,27 +128,6 @@
             <div class="cover-days" id="coverDays"></div>
             <p class="cover-en">Forever &amp; Always</p>
             <p class="cover-sub" id="coverSub"></p>
-          </div>
-
-          <!-- 右侧：便签墙 -->
-          <div class="wall-panel">
-            <div class="wall-head">便签墙</div>
-            <div class="wall" id="stickyWall"></div>
-            <div class="sticky-form" id="stickyForm" hidden>
-              <textarea id="stickyText" class="sticky-input" placeholder="写张便签…" maxlength="70"></textarea>
-              <div class="sticky-colors">
-                <button data-color="pink" class="col pink sel" aria-label="粉色"></button>
-                <button data-color="yellow" class="col yellow" aria-label="黄色"></button>
-                <button data-color="blue" class="col blue" aria-label="蓝色"></button>
-                <button data-color="green" class="col green" aria-label="绿色"></button>
-                <button data-color="lavender" class="col lavender" aria-label="紫色"></button>
-              </div>
-              <div class="sticky-actions">
-                <button class="link" id="stickyCancel">取消</button>
-                <button class="joy-save" id="stickySaveBtn">贴上墙</button>
-              </div>
-            </div>
-            <button class="wall-add" id="stickyAddBtn">+ 贴一张</button>
           </div>
         </div>
       </div>

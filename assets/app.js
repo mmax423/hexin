@@ -17,7 +17,8 @@
     placeEdit: null, draftPlaceImgs: [], placeCat: 'other',
     map: null, mapReady: false,
     calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), dayKey: null,
-    loveEdit: null, draftLoveImgs: []
+    loveEdit: null, draftLoveImgs: [],
+    timerInterval: null, joyImg: null, stickyColor: 'pink'
   };
 
   /* ---------- 工具 ---------- */
@@ -57,19 +58,99 @@
   });
 
   /* ---------- 封面 ---------- */
+  function formatTogether(set) {
+    if (!set.since) return { days: 0, timer: '00:00:00' };
+    const start = new Date(set.since + 'T00:00:00').getTime();
+    const diff = Date.now() - start;
+    const days = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    return { days: days >= 0 ? days : 0, timer: pad(h) + ':' + pad(m) + ':' + pad(s) };
+  }
   function renderCover() {
     const set = Store.getSettings();
     const a = set.nameA || '', b = set.nameB || '';
     $('#coverNames').textContent = (a && b) ? `${a} 与 ${b}` : '合心';
-    const days = Store.daysTogether(set.since);
-    $('#coverDays').innerHTML = `${days}<small>天</small>`;
-    $('#navDays').textContent = days ? `在一起 ${days} 天` : '';
+    const t = formatTogether(set);
+    $('#coverDays').innerHTML = `<span class='days-num'>${t.days}</span><small>天</small><span class='timer'>${t.timer}</span>`;
+    $('#navDays').textContent = t.days ? `在一起 ${t.days} 天` : '';
     $('#coverSub').textContent = set.since ? `自 ${Store.fmtDate(set.since)} 起` : '';
     const diary = Store.getDiary(), notes = Store.getNotes(), places = Store.getPlaces();
     $('#idxDiary').textContent = diary.length ? diary[0].title : '还没有';
     $('#idxNotes').textContent = `${notes.length} 则`;
     $('#idxCal').textContent = set.since ? `自 ${Store.fmtDate(set.since)}` : '—';
     $('#idxPlaces').textContent = `${places.length} 处`;
+    renderStickers();
+    clearInterval(state.timerInterval);
+    if (set.since) {
+      state.timerInterval = setInterval(() => {
+        const nt = formatTogether(Store.getSettings());
+        const cd = $('#coverDays');
+        if (cd) cd.innerHTML = `<span class='days-num'>${nt.days}</span><small>天</small><span class='timer'>${nt.timer}</span>`;
+      }, 1000);
+    }
+  }
+
+  function renderJoyPreview() {
+    const box = $('#joyPreview'); if (!box) return;
+    box.innerHTML = state.joyImg ? `<img src='${state.joyImg}' alt=''><button class='rm' id='joyRmImg' title='移除'>×</button>` : '';
+    const rm = $('#joyRmImg'); if (rm) rm.addEventListener('click', () => { state.joyImg = null; renderJoyPreview(); });
+  }
+  function onJoyFiles(files) {
+    for (const f of files) {
+      if (!f.type.startsWith('image/')) continue;
+      compressImage(f).then((url) => { state.joyImg = url; renderJoyPreview(); });
+    }
+  }
+  async function saveJoy() {
+    const text = $('#joyText').value.trim();
+    if (!text && !state.joyImg) { toast('写点什么或贴张图再保存'); return; }
+    const btn = $('#joySaveBtn'); const old = btn.textContent; btn.textContent = '保存中…';
+    try {
+      await Store.addNote({ text: text || '（一张图）', images: state.joyImg ? [state.joyImg] : [] });
+      $('#joyText').value = ''; state.joyImg = null; renderJoyPreview();
+      toast('已贴到随笔'); renderAll();
+    } catch (e) { toast('保存失败：' + (e.message || '请重试')); }
+    finally { btn.textContent = old; }
+  }
+
+  const STICKY_COLORS = ['pink', 'yellow', 'blue', 'green', 'lavender'];
+  function renderStickers() {
+    const box = $('#stickyWall'); if (!box) return;
+    box.innerHTML = '';
+    const list = Store.getStickers();
+    const today = todayISO();
+    list.forEach((s, i) => {
+      const el = document.createElement('div');
+      const color = STICKY_COLORS.includes(s.color) ? s.color : 'pink';
+      el.className = 'sticky ' + color + (s.date === today ? '' : ' expired');
+      el.style.animationDelay = (i * 0.04) + 's';
+      el.innerHTML = `<span class='s-text'>${esc(s.text)}</span><button class='del' title='删除'>×</button>`;
+      el.querySelector('.del').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (confirm('删除这张便签？')) { Store.removeSticker(s.id).then(() => { toast('已删除'); renderAll(); }); }
+      });
+      box.appendChild(el);
+    });
+  }
+  function toggleStickyForm(show) {
+    const form = $('#stickyForm'); const btn = $('#stickyAddBtn');
+    if (!form) return;
+    const open = (typeof show === 'boolean') ? show : form.hidden;
+    form.hidden = !open;
+    if (btn) btn.hidden = open;
+    if (open && $('#stickyText')) $('#stickyText').focus();
+  }
+  async function saveSticky() {
+    const text = $('#stickyText').value.trim();
+    if (!text) { toast('便签写点什么'); return; }
+    const btn = $('#stickySaveBtn'); const old = btn.textContent; btn.textContent = '贴上…';
+    try {
+      await Store.addSticker({ text, color: state.stickyColor, date: todayISO() });
+      $('#stickyText').value = ''; toggleStickyForm(false); toast('便签已贴上'); renderAll();
+    } catch (e) { toast('保存失败：' + (e.message || '请重试')); }
+    finally { btn.textContent = old; }
   }
 
   /* ---------- 日记 ---------- */
@@ -627,6 +708,24 @@
     $('#noteInput').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') saveNote(); });
     $('#noteInput').addEventListener('focus', () => { $('#noteHint').textContent = Store.fmtDateTime(Date.now()); });
     $('#noteInput').addEventListener('blur', () => { if (!$('#noteInput').value) $('#noteHint').textContent = ''; });
+
+    /* 今日喜事 */
+    $('#joyImgBtn').addEventListener('click', () => $('#joyFile').click());
+    $('#joyFile').addEventListener('change', (e) => { onJoyFiles(e.target.files); e.target.value = ''; });
+    $('#joySaveBtn').addEventListener('click', saveJoy);
+    $('#joyText').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') saveJoy(); });
+
+    /* 便签墙 */
+    $('#stickyAddBtn').addEventListener('click', () => toggleStickyForm(true));
+    $('#stickyCancel').addEventListener('click', () => toggleStickyForm(false));
+    $('#stickySaveBtn').addEventListener('click', saveSticky);
+    $('#stickyText').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') saveSticky(); });
+    $$('.sticky-colors .col').forEach((c) => c.addEventListener('click', () => {
+      $$('.sticky-colors .col').forEach((x) => x.classList.remove('sel'));
+      c.classList.add('sel');
+      state.stickyColor = c.dataset.color;
+    }));
+
     $('#saveSettingsBtn').addEventListener('click', saveSettings);
     $('#exportBtn').addEventListener('click', doExport);
     $('#importBtn').addEventListener('click', doImport);

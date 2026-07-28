@@ -9,14 +9,14 @@
   <title>合心</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
   <!-- 未连接云端时的安全提示（仅本地模式出现，部署前请先配置 config.js） -->
   <div class="local-warn" id="localWarn" hidden>
-    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-07-27-ghpages-v4]</b></span>
+    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-07-27-ghpages-v5]</b></span>
     <button id="localWarnClose" aria-label="关闭">×</button>
   </div>
   <script>
@@ -84,12 +84,13 @@
     <!-- ========== 封面 ========== -->
     <section class="view active" id="view-index">
       <div class="cover">
-        <div class="cover-label">OUR DIARY</div>
+        <div class="cover-label">Our Diary</div>
         <div class="cover-title-row">
           <h1 class="cover-names" id="coverNames">合心</h1>
           <img class="cover-avatar" src="assets/images/avatar.png" alt="她的虚拟形象" />
         </div>
         <div class="cover-days" id="coverDays"></div>
+        <p class="cover-en">Forever &amp; Always</p>
         <p class="cover-sub" id="coverSub"></p>
       </div>
       <div class="index-list">

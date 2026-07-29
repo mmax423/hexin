@@ -38,6 +38,19 @@
     $$('.view').forEach((v) => v.classList.remove('active'));
     const sec = $('#view-' + name); if (sec) sec.classList.add('active');
     $$('.nav-link').forEach((l) => l.classList.toggle('active', l.dataset.view === name));
+    // 便签墙：离开首页复位拉起状态，进入首页确保封面归位
+    const panel = document.getElementById('coverPanel');
+    if (name !== 'index') {
+      document.body.classList.remove('home');
+      if (window.__closeWall) window.__closeWall();
+    } else {
+      document.body.classList.add('home');
+      if (panel) {
+        panel.style.visibility = '';
+        if (window.gsap) window.gsap.set(panel, { y: 0, rotateX: 0, autoAlpha: 1 });
+        else panel.style.transform = '';
+      }
+    }
     if (name === 'places') initMapIfNeeded();
     if (name === 'calendar') renderCalendar();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -131,17 +144,36 @@
       const el = document.createElement('div');
       const color = STICKY_COLORS.includes(s.color) ? s.color : 'pink';
       const pos = (s.x != null && s.y != null) ? { x: s.x, y: s.y } : fallbackPos(i);
-      el.className = 'sticky ' + color + (s.date === today ? '' : ' expired');
+      el.className = 'sticky ' + color + (s.date === today ? '' : ' expired') + (i >= 60 ? ' dim' : '');
       el.style.setProperty('--x', pos.x + '%');
       el.style.setProperty('--y', pos.y + '%');
       el.style.animationDelay = (i * 0.04) + 's';
-      el.innerHTML = `<span class='s-text'>${esc(s.text)}</span><button class='del' title='删除'>×</button>`;
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('aria-label', '便签：' + (s.text || ''));
+      el.innerHTML = `<span class='s-text'>${esc(s.text)}</span><button class='del' title='删除' aria-label='删除'>×</button>`;
       el.querySelector('.del').addEventListener('click', (e) => {
         e.stopPropagation();
         if (confirm('删除这张便签？')) { Store.removeSticker(s.id).then(() => { toast('已删除'); renderAll(); }); }
       });
+      // 点击便签 → 撕下 3D 阅读（展开墙或折叠态都可触发）
+      el.addEventListener('click', () => tearOpen(el, s));
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tearOpen(el, s); } });
       box.appendChild(el);
     });
+  }
+  // 云端回读可能丢失 x,y，进入时补齐一次并持久化（避免每次乱跳）
+  async function normalizeStickerPositions() {
+    const list = Store.getStickers();
+    let dirty = false;
+    for (let i = 0; i < list.length; i++) {
+      const s = list[i];
+      if (s.x == null || s.y == null) {
+        const p = fallbackPos(i);
+        try { await Store.updateSticker(s.id, { x: p.x, y: p.y }); dirty = true; } catch (_) {}
+      }
+    }
+    if (dirty) renderStickers();
   }
   function toggleStickyForm(show) {
     const form = $('#stickyForm'); const btn = $('#stickyAddBtn');
@@ -768,6 +800,100 @@
     p.addEventListener('pointercancel', onEnd);
   }
 
+  /* ---------- 便签墙：拉绳揭示 + 撕下 3D 阅读 ---------- */
+  const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function initRope() {
+    const rope = document.getElementById('stickyRope');
+    const panel = document.getElementById('coverPanel');
+    const wall = document.getElementById('stickyLayer');
+    const closeBtn = document.getElementById('wallClose');
+    if (!rope || !panel || !wall) return;
+    const g = () => window.gsap;
+    const TH = () => Math.max(120, window.innerHeight * 0.3);
+    rope.setAttribute('aria-expanded', 'false');
+    let mode = 'collapsed', startY = 0;
+
+    const onDown = (e) => {
+      if (!document.body.classList.contains('home')) return;
+      if (document.body.classList.contains('wall-open')) return;
+      mode = 'dragging'; startY = e.clientY;
+      if (g()) { g().killTweensOf(panel); try { rope.setPointerCapture(e.pointerId); } catch (_) {} }
+      e.preventDefault();
+    };
+    const onMove = (e) => {
+      if (mode !== 'dragging') return;
+      const dy = Math.max(-window.innerHeight, e.clientY - startY);
+      if (g()) g().set(panel, { y: dy, rotateX: reducedMotion() ? 0 : dy * -0.03, autoAlpha: 1 - Math.min(0.25, -dy / 4000) });
+    };
+    const onUp = (e) => {
+      if (mode !== 'dragging') return;
+      const dy = e.clientY - startY;
+      mode = 'collapsed';
+      if (dy <= -TH()) openWall();
+      else if (g()) g().to(panel, { y: 0, rotateX: 0, autoAlpha: 1, duration: .4, ease: 'power2.out' });
+      else panel.style.transform = '';
+    };
+    rope.addEventListener('pointerdown', onDown);
+    rope.addEventListener('pointermove', onMove);
+    rope.addEventListener('pointerup', onUp);
+    rope.addEventListener('pointercancel', onUp);
+
+    // 点墙空白 / 收起按钮 → 放下墙
+    wall.addEventListener('click', (e) => { if (e.target === wall && document.body.classList.contains('wall-open')) closeWall(); });
+    if (closeBtn) closeBtn.addEventListener('click', closeWall);
+
+    function openWall() {
+      if (g()) g().to(panel, { y: '-100%', rotateX: 0, autoAlpha: 0, duration: .6, ease: 'power3.inOut', onComplete: () => { panel.style.visibility = 'hidden'; } });
+      else panel.style.transform = 'translateY(-100%)';
+      document.body.classList.add('wall-open');
+      rope.setAttribute('aria-expanded', 'true');
+    }
+    function closeWall() {
+      document.body.classList.remove('wall-open');
+      rope.setAttribute('aria-expanded', 'false');
+      panel.style.visibility = '';
+      if (g()) g().to(panel, { y: 0, rotateX: 0, autoAlpha: 1, duration: .5, ease: 'power3.inOut' });
+      else panel.style.transform = '';
+    }
+    window.__closeWall = closeWall;
+  }
+
+  function tearOpen(el, s) {
+    const card = document.getElementById('tearCard');
+    if (!card) return;
+    const r = el.getBoundingClientRect();
+    const g = window.gsap;
+    const color = STICKY_COLORS.includes(s.color) ? s.color : 'pink';
+    card.className = 'tear-card ' + color;
+    card.querySelector('.tc-text').textContent = s.text || '';
+    card.hidden = false;
+    el.style.visibility = 'hidden';
+    const ry = reducedMotion() ? 0 : '+=360';
+    const rx = reducedMotion() ? 0 : 6;
+    const finish = () => {
+      if (g) {
+        const tl = card._tl;
+        tl.to(card, { left: '50%', top: '50%', xPercent: -50, yPercent: -50, width: Math.min(420, window.innerWidth * 0.9), height: 'auto', rotateY: ry, rotateX: rx, duration: .7, ease: 'power3.out' })
+          .fromTo(card.querySelector('.tc-text'), { opacity: 0 }, { opacity: 1, duration: .3 }, '-=.2');
+      } else {
+        card.style.left = '50%'; card.style.top = '50%'; card.style.transform = 'translate(-50%,-50%)';
+        card.style.width = Math.min(420, window.innerWidth * 0.9) + 'px'; card.style.height = 'auto';
+      }
+    };
+    if (g) {
+      const tl = g.timeline();
+      card._tl = tl;
+      g.set(card, { position: 'fixed', left: r.left, top: r.top, width: r.width, height: r.height, transformPerspective: 1200, rotateY: 0, rotateX: 0, scale: 1, autoAlpha: 1, xPercent: 0, yPercent: 0, zIndex: 80 });
+      finish();
+      card.querySelector('.tc-close').onclick = () => { tl.eventCallback('onReverseComplete', () => { el.style.visibility = ''; card.hidden = true; }); tl.reverse(); };
+    } else {
+      Object.assign(card.style, { position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', zIndex: 80, opacity: 1, display: 'block' });
+      finish();
+      card.querySelector('.tc-close').onclick = () => { el.style.visibility = ''; card.hidden = true; card.style.transform = ''; };
+    }
+  }
+
   /* ---------- 统一渲染 ---------- */
   function renderAll() {
     renderCover(); renderDiary(); renderNotes(); renderPlaces();
@@ -805,6 +931,7 @@
     $('#joyReopen').addEventListener('click', () => { const p = $('#joyPanel'); if (p) p.style.display = ''; $('#joyReopen').hidden = true; });
     makeJoyDraggable();
     applyJoyPos();
+    initRope();
 
     /* 便签墙 */
     $('#stickyAddBtn').addEventListener('click', () => toggleStickyForm(true));
@@ -874,7 +1001,9 @@
     state.mgmt = true; document.body.classList.add('mgmt');
     updateMgmtUI();
     try { await Store.loadAll(); } catch (e) { toast('加载失败：' + (e.message || '请重试')); }
-    loadSettingsForm(); renderAll();
+    loadSettingsForm();
+    try { await normalizeStickerPositions(); } catch (_) {}
+    renderAll();
     updateCloudBadge();
     if (Store.hasLegacyLocal()) $('#migrateHint').hidden = false;
   }
@@ -926,6 +1055,8 @@
     // Store.useLocal 只是初始值 true，不代表真进了本地模式。
     // 是否显示等 login() → loadAll() 探测完，由 updateCloudBadge() 决定。
     document.body.classList.remove('authed');
+    // 首页默认激活，便签墙/拉绳需 body.home 才显示
+    document.body.classList.add('home');
   }
   // 防御式启动：若 DOM 已就绪（DOMContentLoaded 已触发）则立即执行，否则等事件
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

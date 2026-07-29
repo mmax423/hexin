@@ -212,8 +212,8 @@ body.authed .auth-mask{display:none}
 .joy-preview{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
 .joy-preview img{height:54px;width:54px;object-fit:cover;border:3px solid #fff;box-shadow:0 3px 8px rgba(160,100,120,.22);transform:rotate(-2deg)}
 
-/* 便签直接贴到背景上的浮层（在内容之下、背景之上，不挡操作） */
-.sticky-layer{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+/* 便签直接贴到背景上的浮层（默认在 cover-main 内容区之上，保证整张贴纸都能 hover；sticky 自身 pointer-events:auto） */
+.sticky-layer{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
 
 /* 贴便签入口（已并入今日喜事面板） */
 .wall-add{width:100%;margin-top:4px;background:rgba(255,255,255,.5);border:1px dashed var(--line-soft);color:var(--ink-soft);border-radius:2px;padding:9px;font-family:var(--sans);font-size:12px;letter-spacing:.08em;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}

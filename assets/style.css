@@ -194,7 +194,7 @@ body.authed .auth-mask{display:none}
 /* 收起后的入口：列表右上方的小图钉，点一下弹出浮动框 */
 .index-list{position:relative}
 .joy-reopen{position:absolute;top:-30px;right:4px;z-index:5;padding:0;border:none;background:none;cursor:pointer;line-height:0}
-.joy-reopen img{width:32px;height:32px;display:block;object-fit:contain;filter:drop-shadow(0 3px 5px rgba(160,100,120,.35));transition:transform .2s}
+.joy-reopen img{width:42px;height:42px;display:block;object-fit:contain;filter:drop-shadow(0 3px 5px rgba(160,100,120,.35));transition:transform .2s}
 .joy-reopen:hover img{transform:scale(1.12) rotate(-7deg)}
 .joy-reopen[hidden]{display:none}
 @keyframes joyPulse{0%,100%{box-shadow:0 0 0 4px rgba(210,123,160,.18),0 4px 12px rgba(160,100,120,.3)}50%{box-shadow:0 0 0 8px rgba(210,123,160,.08),0 4px 12px rgba(160,100,120,.3)}}

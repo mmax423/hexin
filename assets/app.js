@@ -717,33 +717,48 @@
   }
   function makeJoyDraggable() {
     const p = $('#joyPanel'); if (!p) return;
-    let dragging = false, dx = 0, dy = 0;
+    let dragging = false, startX = 0, startY = 0, startL = 0, startT = 0;
     const isInteractive = (el) => el && el.closest('textarea, input, button, select, [contenteditable], .sticky-form, label');
 
     // 禁用面板内图片的默认拖拽行为，防止拖动预览图时触发浏览器原生 drag
     p.querySelectorAll('img').forEach((img) => { img.draggable = false; img.style.webkitUserDrag = 'none'; });
 
+    // 取面板当前 left/top 的「逻辑坐标」：优先读 style，无则用一次 getBoundingClientRect 兜底
+    const readPos = () => {
+      let sl = parseFloat(p.style.left), st = parseFloat(p.style.top);
+      if (!isFinite(sl) || !isFinite(st)) {
+        const r = p.getBoundingClientRect();
+        if (!isFinite(sl)) sl = r.left;
+        if (!isFinite(st)) st = r.top;
+      }
+      return { sl, st };
+    };
+
     const onDown = (e) => {
       if (isInteractive(e.target)) return;          // 文本框 / 按钮 / 表单等不触发拖动
       dragging = true;
-      const pr = p.getBoundingClientRect();
-      dx = e.clientX - pr.left;                     // 鼠标相对于面板左上角的偏移
-      dy = e.clientY - pr.top;
+      startX = e.clientX; startY = e.clientY;
+      const { sl, st } = readPos();
+      startL = sl; startT = st;
       p.classList.add('dragging');
+      p.style.transition = 'none';                  // 拖动期间禁用过渡，避免位置追赶导致的跳动
       try { p.setPointerCapture(e.pointerId); } catch (_) {}
       e.preventDefault();
     };
     const onMove = (e) => {
       if (!dragging) return;
-      let nl = e.clientX - dx, nt = e.clientY - dy;
-      const pr = p.getBoundingClientRect();
+      // 纯增量：相对按下瞬间的位移，与鼠标完全一致，不受任何祖先 transform 影响
+      let nl = startL + (e.clientX - startX);
+      let nt = startT + (e.clientY - startY);
+      const w = p.offsetWidth || 320;
       // 允许贴边/略探出，但始终保留 80px 在屏内，便于再次抓取
-      nl = Math.max(80 - pr.width, Math.min(nl, window.innerWidth - 80));
+      nl = Math.max(80 - w, Math.min(nl, window.innerWidth - 80));
       nt = Math.max(20, Math.min(nt, window.innerHeight - 40));
       p.style.left = nl + 'px'; p.style.top = nt + 'px'; p.style.right = 'auto';
     };
     const onEnd = (e) => {
       if (!dragging) return; dragging = false; p.classList.remove('dragging');
+      p.style.transition = '';
       try { p.releasePointerCapture(e.pointerId); } catch (_) {}
       saveJoyPos();
     };

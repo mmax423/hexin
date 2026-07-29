@@ -717,34 +717,40 @@
   }
   function makeJoyDraggable() {
     const p = $('#joyPanel'); if (!p) return;
-    let dragging = false, sx = 0, sy = 0, ol = 0, ot = 0;
-    const isInteractive = (el) => el && el.closest('textarea, input, button, select, [contenteditable], .sticky-form');
-    p.addEventListener('pointerdown', (e) => {
-      if (isInteractive(e.target)) return;          // 文本框 / 按钮等不触发拖动
+    let dragging = false, dx = 0, dy = 0;
+    const isInteractive = (el) => el && el.closest('textarea, input, button, select, [contenteditable], .sticky-form, label');
+
+    // 禁用面板内图片的默认拖拽行为，防止拖动预览图时触发浏览器原生 drag
+    p.querySelectorAll('img').forEach((img) => { img.draggable = false; img.style.webkitUserDrag = 'none'; });
+
+    const onDown = (e) => {
+      if (isInteractive(e.target)) return;          // 文本框 / 按钮 / 表单等不触发拖动
       dragging = true;
       const pr = p.getBoundingClientRect();
-      ol = pr.left; ot = pr.top;                     // 视口坐标（fixed 定位）
-      sx = e.clientX; sy = e.clientY;
+      dx = e.clientX - pr.left;                     // 鼠标相对于面板左上角的偏移
+      dy = e.clientY - pr.top;
       p.classList.add('dragging');
       try { p.setPointerCapture(e.pointerId); } catch (_) {}
       e.preventDefault();
-    });
-    p.addEventListener('pointermove', (e) => {
+    };
+    const onMove = (e) => {
       if (!dragging) return;
+      let nl = e.clientX - dx, nt = e.clientY - dy;
       const pr = p.getBoundingClientRect();
-      let nl = ol + (e.clientX - sx), nt = ot + (e.clientY - sy);
-      // 自由拖动：允许贴边/略探出，但始终保留 80px 在屏内，便于再次抓取
+      // 允许贴边/略探出，但始终保留 80px 在屏内，便于再次抓取
       nl = Math.max(80 - pr.width, Math.min(nl, window.innerWidth - 80));
       nt = Math.max(20, Math.min(nt, window.innerHeight - 40));
       p.style.left = nl + 'px'; p.style.top = nt + 'px'; p.style.right = 'auto';
-    });
-    const end = (e) => {
+    };
+    const onEnd = (e) => {
       if (!dragging) return; dragging = false; p.classList.remove('dragging');
       try { p.releasePointerCapture(e.pointerId); } catch (_) {}
       saveJoyPos();
     };
-    p.addEventListener('pointerup', end);
-    p.addEventListener('pointercancel', end);
+    p.addEventListener('pointerdown', onDown);
+    p.addEventListener('pointermove', onMove);
+    p.addEventListener('pointerup', onEnd);
+    p.addEventListener('pointercancel', onEnd);
   }
 
   /* ---------- 统一渲染 ---------- */

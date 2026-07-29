@@ -16,7 +16,7 @@
 <body>
   <!-- 未连接云端时的安全提示（仅本地模式出现，部署前请先配置 config.js） -->
   <div class="local-warn" id="localWarn" hidden>
-    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-07-29-ghpages-v15]</b></span>
+    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-07-29-ghpages-v16]</b></span>
     <button id="localWarnClose" aria-label="关闭">×</button>
   </div>
   <script>
@@ -103,16 +103,10 @@
         </div>
       </div>
 
-      <button class="joy-reopen" id="joyReopen" hidden aria-label="今日喜事">
-        <svg viewBox="0 0 24 28" width="22" height="24" aria-hidden="true">
-          <line x1="12" y1="11" x2="12" y2="25" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
-          <path d="M12 26l-3.2 1.4 3.2-5.4 3.2 5.4z" fill="currentColor"/>
-          <circle cx="12" cy="6.5" r="6.2" fill="currentColor"/>
-          <circle cx="12" cy="6.5" r="2.3" fill="#fff" opacity="0.9"/>
-        </svg>
-      </button>
-
       <div class="index-list">
+        <button class="joy-reopen" id="joyReopen" hidden aria-label="今日喜事">
+          <img src="assets/images/pin.png" alt="今日喜事" width="28" height="28">
+        </button>
         <a class="index-row" data-goto="diary">
           <span class="index-title">日记</span>
           <span class="index-meta" id="idxDiary">—</span>

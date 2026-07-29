@@ -717,34 +717,34 @@
   }
   function makeJoyDraggable() {
     const p = $('#joyPanel'); if (!p) return;
-    const handle = p.querySelector('.joy-head'); if (!handle) return;
     let dragging = false, sx = 0, sy = 0, ol = 0, ot = 0;
-    handle.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('button')) return;
+    const isInteractive = (el) => el && el.closest('textarea, input, button, select, [contenteditable], .sticky-form');
+    p.addEventListener('pointerdown', (e) => {
+      if (isInteractive(e.target)) return;          // 文本框 / 按钮等不触发拖动
       dragging = true;
       const pr = p.getBoundingClientRect();
-      ol = pr.left; ot = pr.top;            // 视口坐标（fixed 定位）
+      ol = pr.left; ot = pr.top;                     // 视口坐标（fixed 定位）
       sx = e.clientX; sy = e.clientY;
-      p.classList.add('dragging'); handle.style.cursor = 'grabbing';
-      try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+      p.classList.add('dragging');
+      try { p.setPointerCapture(e.pointerId); } catch (_) {}
       e.preventDefault();
     });
-    handle.addEventListener('pointermove', (e) => {
+    p.addEventListener('pointermove', (e) => {
       if (!dragging) return;
       const pr = p.getBoundingClientRect();
       let nl = ol + (e.clientX - sx), nt = ot + (e.clientY - sy);
-      // 自由拖动：允许贴到边缘甚至探出一点，但始终保留 80px 在屏内，便于再次抓取
+      // 自由拖动：允许贴边/略探出，但始终保留 80px 在屏内，便于再次抓取
       nl = Math.max(80 - pr.width, Math.min(nl, window.innerWidth - 80));
       nt = Math.max(20, Math.min(nt, window.innerHeight - 40));
       p.style.left = nl + 'px'; p.style.top = nt + 'px'; p.style.right = 'auto';
     });
     const end = (e) => {
-      if (!dragging) return; dragging = false; p.classList.remove('dragging'); handle.style.cursor = '';
-      try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
+      if (!dragging) return; dragging = false; p.classList.remove('dragging');
+      try { p.releasePointerCapture(e.pointerId); } catch (_) {}
       saveJoyPos();
     };
-    handle.addEventListener('pointerup', end);
-    handle.addEventListener('pointercancel', end);
+    p.addEventListener('pointerup', end);
+    p.addEventListener('pointercancel', end);
   }
 
   /* ---------- 统一渲染 ---------- */

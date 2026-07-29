@@ -16,7 +16,7 @@
 <body>
   <!-- 未连接云端时的安全提示（仅本地模式出现，部署前请先配置 config.js） -->
   <div class="local-warn" id="localWarn" hidden>
-    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-07-29-ghpages-v19]</b></span>
+    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-07-29-ghpages-v20]</b></span>
     <button id="localWarnClose" aria-label="关闭">×</button>
   </div>
   <script>
@@ -276,9 +276,10 @@
 
   <!-- 便签墙（真背景墙：body 直接子级、fixed，避免被 .view 动画 transform 干扰） -->
   <div class="sticky-layer" id="stickyLayer" aria-hidden="true"></div>
-  <!-- 拉绳：拖一下把封面拉上去，露出整面便签墙 -->
-  <button class="sticky-rope" id="stickyRope" aria-label="上拉看便签墙" aria-expanded="false">
-    <span class="rope-knot"></span><span>上拉看墙</span>
+  <!-- 拉绳：从右上角垂下的绳子，点一下把封面拉上去，露出整面便签墙 -->
+  <button class="sticky-rope" id="stickyRope" aria-label="拉开看便签墙" aria-expanded="false" title="拉开看便签墙">
+    <span class="rope-line"></span>
+    <span class="rope-handle" aria-hidden="true"><span class="rope-ring"></span></span>
   </button>
   <!-- 墙展开后的收起按钮 -->
   <button class="wall-close" id="wallClose" aria-label="放下便签墙">↓ 放下墙</button>

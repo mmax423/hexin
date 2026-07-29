@@ -16,7 +16,7 @@
 <body>
   <!-- 未连接云端时的安全提示（仅本地模式出现，部署前请先配置 config.js） -->
   <div class="local-warn" id="localWarn" hidden>
-    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-07-29-ghpages-v18]</b></span>
+    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-07-29-ghpages-v19]</b></span>
     <button id="localWarnClose" aria-label="关闭">×</button>
   </div>
   <script>
@@ -83,46 +83,45 @@
 
     <!-- ========== 封面 ========== -->
     <section class="view active" id="view-index">
-      <div class="cover">
-        <!-- 便签直接贴到背景上的浮层（在内容之下、背景之上） -->
-        <div class="sticky-layer" id="stickyLayer" aria-hidden="true"></div>
+      <div id="coverPanel">
+        <div class="cover">
+          <div class="cover-main">
 
-        <div class="cover-main">
-
-          <!-- 中间 -->
-          <div class="cover-center">
-            <div class="cover-label">Our Diary</div>
-            <div class="cover-title-row">
-              <h1 class="cover-names" id="coverNames">合心</h1>
-              <img class="cover-avatar" src="assets/images/avatar.png" alt="她的虚拟形象" />
+            <!-- 中间 -->
+            <div class="cover-center">
+              <div class="cover-label">Our Diary</div>
+              <div class="cover-title-row">
+                <h1 class="cover-names" id="coverNames">合心</h1>
+                <img class="cover-avatar" src="assets/images/avatar.png" alt="她的虚拟形象" />
+              </div>
+              <div class="cover-days" id="coverDays"></div>
+              <p class="cover-en">Forever &amp; Always</p>
+              <p class="cover-sub" id="coverSub"></p>
             </div>
-            <div class="cover-days" id="coverDays"></div>
-            <p class="cover-en">Forever &amp; Always</p>
-            <p class="cover-sub" id="coverSub"></p>
           </div>
         </div>
-      </div>
 
-      <div class="index-list">
-        <button class="joy-reopen" id="joyReopen" hidden aria-label="今日喜事">
-          <img src="assets/images/pin.png" alt="今日喜事" width="28" height="28">
-        </button>
-        <a class="index-row" data-goto="diary">
-          <span class="index-title">日记</span>
-          <span class="index-meta" id="idxDiary">—</span>
-        </a>
-        <a class="index-row" data-goto="notes">
-          <span class="index-title">随笔</span>
-          <span class="index-meta" id="idxNotes">—</span>
-        </a>
-        <a class="index-row" data-goto="calendar">
-          <span class="index-title">日历</span>
-          <span class="index-meta" id="idxCal">—</span>
-        </a>
-        <a class="index-row" data-goto="places">
-          <span class="index-title">足迹</span>
-          <span class="index-meta" id="idxPlaces">—</span>
-        </a>
+        <div class="index-list">
+          <button class="joy-reopen" id="joyReopen" hidden aria-label="今日喜事">
+            <img src="assets/images/pin.png" alt="今日喜事" width="28" height="28">
+          </button>
+          <a class="index-row" data-goto="diary">
+            <span class="index-title">日记</span>
+            <span class="index-meta" id="idxDiary">—</span>
+          </a>
+          <a class="index-row" data-goto="notes">
+            <span class="index-title">随笔</span>
+            <span class="index-meta" id="idxNotes">—</span>
+          </a>
+          <a class="index-row" data-goto="calendar">
+            <span class="index-title">日历</span>
+            <span class="index-meta" id="idxCal">—</span>
+          </a>
+          <a class="index-row" data-goto="places">
+            <span class="index-title">足迹</span>
+            <span class="index-meta" id="idxPlaces">—</span>
+          </a>
+        </div>
       </div>
     </section>
 
@@ -275,6 +274,20 @@
     </div>
   </div>
 
+  <!-- 便签墙（真背景墙：body 直接子级、fixed，避免被 .view 动画 transform 干扰） -->
+  <div class="sticky-layer" id="stickyLayer" aria-hidden="true"></div>
+  <!-- 拉绳：拖一下把封面拉上去，露出整面便签墙 -->
+  <button class="sticky-rope" id="stickyRope" aria-label="上拉看便签墙" aria-expanded="false">
+    <span class="rope-knot"></span><span>上拉看墙</span>
+  </button>
+  <!-- 墙展开后的收起按钮 -->
+  <button class="wall-close" id="wallClose" aria-label="放下便签墙">↓ 放下墙</button>
+  <!-- 撕下阅读卡（独立元素，不扰动墙上布局） -->
+  <div class="tear-card" id="tearCard" hidden>
+    <button class="tc-close" aria-label="放回">放回墙上</button>
+    <div class="tc-text"></div>
+  </div>
+
   <footer class="footer">
     <span id="year"></span> · 合心
   </footer>
@@ -379,6 +392,7 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="assets/vendor/gsap.min.js"></script>
   <script src="assets/config.js"></script>
   <script src="assets/store.js"></script>
   <script src="assets/app.js"></script>

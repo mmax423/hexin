@@ -703,17 +703,17 @@
     finally { e.target.value = ''; }
   }
 
-  /* ---------- 今日喜事面板：拖拽 + 位置记忆 + 收起 ---------- */
+  /* ---------- 今日喜事面板：自由拖拽（视口内任意位置）+ 位置记忆 + 收起 ---------- */
   function applyJoyPos() {
     const p = $('#joyPanel'); if (!p) return;
     try {
-      const raw = localStorage.getItem('hexin_joy_pos');
+      const raw = localStorage.getItem('hexin_joy_pos_fixed');
       if (raw) { const o = JSON.parse(raw); if (o && o.l != null) { p.style.left = o.l; p.style.top = o.t; p.style.right = 'auto'; } }
     } catch (e) {}
   }
   function saveJoyPos() {
     const p = $('#joyPanel'); if (!p) return;
-    try { localStorage.setItem('hexin_joy_pos', JSON.stringify({ l: p.style.left, t: p.style.top })); } catch (e) {}
+    try { localStorage.setItem('hexin_joy_pos_fixed', JSON.stringify({ l: p.style.left, t: p.style.top })); } catch (e) {}
   }
   function makeJoyDraggable() {
     const p = $('#joyPanel'); if (!p) return;
@@ -722,20 +722,21 @@
     handle.addEventListener('pointerdown', (e) => {
       if (e.target.closest('button')) return;
       dragging = true;
-      const pr = p.getBoundingClientRect(), cr = p.offsetParent.getBoundingClientRect();
-      ol = pr.left - cr.left; ot = pr.top - cr.top; sx = e.clientX; sy = e.clientY;
-      p.style.left = ol + 'px'; p.style.top = ot + 'px'; p.style.right = 'auto';
+      const pr = p.getBoundingClientRect();
+      ol = pr.left; ot = pr.top;            // 视口坐标（fixed 定位）
+      sx = e.clientX; sy = e.clientY;
       p.classList.add('dragging'); handle.style.cursor = 'grabbing';
       try { handle.setPointerCapture(e.pointerId); } catch (_) {}
       e.preventDefault();
     });
     handle.addEventListener('pointermove', (e) => {
       if (!dragging) return;
-      const cr = p.offsetParent.getBoundingClientRect(), pr = p.getBoundingClientRect();
+      const pr = p.getBoundingClientRect();
       let nl = ol + (e.clientX - sx), nt = ot + (e.clientY - sy);
-      nl = Math.max(0, Math.min(nl, cr.width - pr.width));
-      nt = Math.max(0, Math.min(nt, cr.height - pr.height));
-      p.style.left = nl + 'px'; p.style.top = nt + 'px';
+      // 自由拖动：允许贴到边缘甚至探出一点，但始终保留 80px 在屏内，便于再次抓取
+      nl = Math.max(80 - pr.width, Math.min(nl, window.innerWidth - 80));
+      nt = Math.max(20, Math.min(nt, window.innerHeight - 40));
+      p.style.left = nl + 'px'; p.style.top = nt + 'px'; p.style.right = 'auto';
     });
     const end = (e) => {
       if (!dragging) return; dragging = false; p.classList.remove('dragging'); handle.style.cursor = '';

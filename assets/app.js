@@ -805,56 +805,48 @@
 
   function initRope() {
     const rope = document.getElementById('stickyRope');
-    const panel = document.getElementById('coverPanel');
     const wall = document.getElementById('stickyLayer');
     const closeBtn = document.getElementById('wallClose');
-    if (!rope || !panel || !wall) return;
+    if (!rope) return;
     const g = () => window.gsap;
-    const TH = () => Math.max(120, window.innerHeight * 0.3);
     rope.setAttribute('aria-expanded', 'false');
-    let mode = 'collapsed', startY = 0;
 
-    const onDown = (e) => {
+    // 点一下右上角垂下的绳子 → 整个封面被拉上去，露出整面便签墙
+    rope.addEventListener('click', () => {
       if (!document.body.classList.contains('home')) return;
       if (document.body.classList.contains('wall-open')) return;
-      mode = 'dragging'; startY = e.clientY;
-      if (g()) { g().killTweensOf(panel); try { rope.setPointerCapture(e.pointerId); } catch (_) {} }
-      e.preventDefault();
-    };
-    const onMove = (e) => {
-      if (mode !== 'dragging') return;
-      const dy = Math.max(-window.innerHeight, e.clientY - startY);
-      if (g()) g().set(panel, { y: dy, rotateX: reducedMotion() ? 0 : dy * -0.03, autoAlpha: 1 - Math.min(0.25, -dy / 4000) });
-    };
-    const onUp = (e) => {
-      if (mode !== 'dragging') return;
-      const dy = e.clientY - startY;
-      mode = 'collapsed';
-      if (dy <= -TH()) openWall();
-      else if (g()) g().to(panel, { y: 0, rotateX: 0, autoAlpha: 1, duration: .4, ease: 'power2.out' });
-      else panel.style.transform = '';
-    };
-    rope.addEventListener('pointerdown', onDown);
-    rope.addEventListener('pointermove', onMove);
-    rope.addEventListener('pointerup', onUp);
-    rope.addEventListener('pointercancel', onUp);
+      openWall();
+    });
+    // 键盘可达性：聚焦后回车 / 空格也能拉开
+    rope.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); rope.click(); }
+    });
 
-    // 点墙空白 / 收起按钮 → 放下墙
-    wall.addEventListener('click', (e) => { if (e.target === wall && document.body.classList.contains('wall-open')) closeWall(); });
+    // 点墙空白处 / 收起按钮 → 放下墙
+    if (wall) wall.addEventListener('click', (e) => { if (e.target === wall && document.body.classList.contains('wall-open')) closeWall(); });
     if (closeBtn) closeBtn.addEventListener('click', closeWall);
 
     function openWall() {
-      if (g()) g().to(panel, { y: '-100%', rotateX: 0, autoAlpha: 0, duration: .6, ease: 'power3.inOut', onComplete: () => { panel.style.visibility = 'hidden'; } });
-      else panel.style.transform = 'translateY(-100%)';
+      const p = document.getElementById('coverPanel');
+      if (g()) {
+        // 绳子先轻轻一拽，再把封面整块上拉滑出，便签墙轻微上浮入场
+        const tl = g().timeline();
+        tl.to(rope.querySelector('.rope-handle'), { y: 10, duration: .12, ease: 'power1.in' })
+          .to(p, { y: '-100%', rotateX: 0, autoAlpha: 0, duration: .6, ease: 'power3.inOut', onComplete: () => { p.style.visibility = 'hidden'; } }, '-=.04');
+        g().fromTo(wall, { y: 30, autoAlpha: .55 }, { y: 0, autoAlpha: 1, duration: .6, ease: 'power3.out' }, '-=.5');
+      } else if (p) {
+        p.style.transform = 'translateY(-100%)';
+      }
       document.body.classList.add('wall-open');
       rope.setAttribute('aria-expanded', 'true');
     }
     function closeWall() {
+      const p = document.getElementById('coverPanel');
       document.body.classList.remove('wall-open');
       rope.setAttribute('aria-expanded', 'false');
-      panel.style.visibility = '';
-      if (g()) g().to(panel, { y: 0, rotateX: 0, autoAlpha: 1, duration: .5, ease: 'power3.inOut' });
-      else panel.style.transform = '';
+      if (p) p.style.visibility = '';
+      if (g() && p) g().to(p, { y: 0, rotateX: 0, autoAlpha: 1, duration: .5, ease: 'power3.inOut' });
+      else if (p) p.style.transform = '';
     }
     window.__closeWall = closeWall;
   }

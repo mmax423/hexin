@@ -212,8 +212,11 @@ body.authed .auth-mask{display:none}
 .joy-preview{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
 .joy-preview img{height:54px;width:54px;object-fit:cover;border:3px solid #fff;box-shadow:0 3px 8px rgba(160,100,120,.22);transform:rotate(-2deg)}
 
-/* 便签直接贴到背景上的浮层（默认在 cover-main 内容区之上，保证整张贴纸都能 hover；sticky 自身 pointer-events:auto） */
-.sticky-layer{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+/* 便签背景墙：真 · 固定层（body 直接子级），仅首页可见；兼作 3D 透视容器 */
+.sticky-layer{position:fixed;inset:0;z-index:3;pointer-events:none;overflow:hidden;display:none;perspective:1200px;transform-style:preserve-3d}
+body.home .sticky-layer{display:block}
+/* 封面内容包层：拉绳上拉时整块滑出，露出背后的墙 */
+#coverPanel{position:relative;z-index:2;transform-origin:top center;will-change:transform}
 
 /* 贴便签入口（已并入今日喜事面板） */
 .wall-add{width:100%;margin-top:4px;background:rgba(255,255,255,.5);border:1px dashed var(--line-soft);color:var(--ink-soft);border-radius:2px;padding:9px;font-family:var(--sans);font-size:12px;letter-spacing:.08em;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
@@ -239,6 +242,13 @@ body.authed .auth-mask{display:none}
 .sticky.expired .s-text{opacity:.88}
 .sticky.expired:hover{opacity:1;filter:none}
 .sticky.expired:hover .s-text{opacity:1}
+/* 墙展开时，旧便签也清晰可读可点 */
+body.wall-open .sticky.expired{opacity:.96;filter:none}
+body.wall-open .sticky.expired .s-text{opacity:1}
+/* 超过 60 张的旧便签：作为背景氛围淡化，依旧可点 */
+.sticky.dim{opacity:.5}
+.sticky.dim.expired{opacity:.4}
+.sticky.dim:hover{opacity:1}
 
 /* 新增便签表单 */
 .sticky-form{margin-top:12px;background:rgba(255,255,255,.72);border:1px dashed var(--line);border-radius:2px;padding:10px}
@@ -492,6 +502,27 @@ body.love-open .love-dot{
 
 .love-view{animation:rise .6s cubic-bezier(.2,.7,.2,1) both}
 .love-head{margin-top:8px;margin-bottom:10px;justify-content:flex-end}
+
+/* ========== 拉绳 / 收起按钮 / 撕下阅读卡 ========== */
+/* 拉绳：固定在底部居中，拖一下把封面拉上去露出便签墙 */
+.sticky-rope{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:6;display:none;align-items:center;gap:9px;padding:9px 18px;border:1px solid var(--line);background:linear-gradient(180deg,#fff,#ffe9f0);border-radius:30px;box-shadow:0 8px 20px rgba(160,100,120,.28),inset 0 1px 0 rgba(255,255,255,.7);cursor:grab;touch-action:none;color:var(--accent-deep);font-family:var(--hand);font-size:15px;letter-spacing:.06em;transition:transform .2s,box-shadow .2s}
+body.home .sticky-rope{display:inline-flex}
+body.wall-open .sticky-rope{display:none}
+.sticky-rope:active{cursor:grabbing}
+.sticky-rope:hover{transform:translateX(-50%) translateY(-2px);box-shadow:0 12px 26px rgba(160,100,120,.34)}
+.sticky-rope .rope-knot{width:14px;height:14px;border-radius:50%;background:var(--accent);box-shadow:inset 0 0 0 3px rgba(255,255,255,.65),0 1px 3px rgba(120,80,100,.4)}
+/* 收起按钮：墙展开时出现在底部 */
+.wall-close{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:7;display:none;padding:9px 20px;border:1px solid var(--line);background:var(--card);color:var(--accent-deep);border-radius:30px;font-family:var(--hand);font-size:15px;letter-spacing:.06em;cursor:pointer;box-shadow:0 8px 20px rgba(160,100,120,.28)}
+body.wall-open .wall-close{display:inline-block}
+.wall-close:hover{background:var(--accent);color:#fff}
+/* 撕下阅读卡：独立层，GSAP 控制 3D 飞行；无 GSAP 时降级为居中显示 */
+.tear-card{display:none;position:fixed;z-index:80;border-radius:3px;padding:28px 26px;box-shadow:0 34px 80px rgba(90,58,69,.5);overflow:hidden;will-change:transform;background:#FFD1DC}
+.tear-card[hidden]{display:none}
+.tear-card:not([hidden]){display:block}
+.tear-card.pink{background:#FFD1DC}.tear-card.yellow{background:#FFF5BA}.tear-card.blue{background:#D4F0FF}.tear-card.green{background:#D9EAD3}.tear-card.lavender{background:#E6E6FA}
+.tear-card .tc-text{font-family:var(--hand);font-size:20px;line-height:1.7;color:var(--ink);text-align:center;word-break:break-word}
+.tear-card .tc-close{position:absolute;top:10px;right:12px;border:none;background:rgba(255,255,255,.72);color:var(--ink-soft);border-radius:20px;padding:5px 12px;font-family:var(--sans);font-size:12px;cursor:pointer;transition:background .2s,color .2s}
+.tear-card .tc-close:hover{background:var(--accent);color:#fff}
 .love-archive{margin-top:6px}
 .love-entry{
   position:relative;

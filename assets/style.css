@@ -191,11 +191,11 @@ body.authed .auth-mask{display:none}
 .joy-title{flex:1;text-align:left;pointer-events:none}
 .joy-hide{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.6);color:var(--ink-soft);font-size:15px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background .2s,color .2s,transform .2s}
 .joy-hide:hover{background:var(--accent);color:#fff;transform:scale(1.08)}
-/* 收起后的入口：列表上方、左对齐的小图钉，点一下弹出浮动框 */
-.joy-reopen{display:inline-flex;align-items:center;justify-content:center;margin:14px 0 0 4px;padding:4px;border:none;background:none;color:var(--accent);line-height:0;cursor:pointer;transition:transform .2s,filter .2s}
-.joy-reopen svg{width:22px;height:24px;display:block;filter:drop-shadow(0 3px 6px rgba(160,100,120,.32));transition:transform .2s}
-.joy-reopen:hover{transform:translateY(-1px)}
-.joy-reopen:hover svg{transform:scale(1.14) rotate(-7deg)}
+/* 收起后的入口：列表右上方的小图钉，点一下弹出浮动框 */
+.index-list{position:relative}
+.joy-reopen{position:absolute;top:-30px;right:4px;z-index:5;padding:0;border:none;background:none;cursor:pointer;line-height:0}
+.joy-reopen img{width:32px;height:32px;display:block;object-fit:contain;filter:drop-shadow(0 3px 5px rgba(160,100,120,.35));transition:transform .2s}
+.joy-reopen:hover img{transform:scale(1.12) rotate(-7deg)}
 .joy-reopen[hidden]{display:none}
 @keyframes joyPulse{0%,100%{box-shadow:0 0 0 4px rgba(210,123,160,.18),0 4px 12px rgba(160,100,120,.3)}50%{box-shadow:0 0 0 8px rgba(210,123,160,.08),0 4px 12px rgba(160,100,120,.3)}}
 .joy-text{width:100%;min-height:130px;resize:none;border:1px dashed var(--line);border-radius:2px;background:rgba(255,255,255,.55);padding:12px;font-family:var(--serif);font-size:15px;color:var(--ink);line-height:1.8}

@@ -180,8 +180,11 @@ body.authed .auth-mask{display:none}
 .cover-center{flex:1;min-width:280px;max-width:460px;text-align:center;padding-top:10px}
 
 /* 左侧：今日喜事（放大，可自由拖拽 / 收起；fixed 浮于视口，可拖到任意位置） */
-.joy-panel{position:fixed;top:84px;left:22px;z-index:45;width:320px;flex-shrink:0;background:var(--card);background-image:var(--grain);border:1px solid var(--line);border-radius:4px;box-shadow:0 3px 0 rgba(160,100,120,.06),0 18px 42px rgba(160,100,120,.18);padding:20px 18px 18px;user-select:none}
+.joy-panel{position:fixed;top:84px;left:22px;z-index:45;width:320px;flex-shrink:0;background:var(--card);background-image:var(--grain);border:1px solid var(--line);border-radius:4px;box-shadow:0 3px 0 rgba(160,100,120,.06),0 18px 42px rgba(160,100,120,.18);padding:20px 18px 18px;user-select:none;cursor:grab;touch-action:none}
 .joy-panel.dragging{box-shadow:0 8px 0 rgba(160,100,120,.08),0 28px 60px rgba(160,100,120,.28);cursor:grabbing}
+.joy-panel textarea, .joy-panel input, .joy-panel button{cursor:auto}
+.joy-panel textarea{cursor:text}
+.joy-panel button{cursor:pointer}
 .joy-panel::before{content:"";position:absolute;top:-10px;left:28px;width:62px;height:18px;transform:rotate(-3deg);background:var(--tape);border-left:1px dashed rgba(255,255,255,.6);border-right:1px dashed rgba(255,255,255,.6);box-shadow:0 2px 5px rgba(160,100,120,.12)}
 .joy-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:var(--latin);font-size:14px;letter-spacing:.18em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:14px;text-align:center;cursor:grab;touch-action:none}
 .joy-head:active{cursor:grabbing}
@@ -229,9 +232,9 @@ body.authed .auth-mask{display:none}
 .sticky.lavender{background:#E6E6FA}
 .s-text{transition:opacity .3s ease,transform .3s cubic-bezier(.2,.8,.2,1)}
 
-/* 过期便签：仅褪色 + 轻微模糊，文字始终依稀可辨；hover 渐显放大 */
-.sticky.expired{opacity:.66;filter:grayscale(.5) blur(1px)}
-.sticky.expired .s-text{opacity:.8}
+/* 过期便签：仅轻度褪色 + 极轻模糊，文字清晰可辨；hover 渐显放大 */
+.sticky.expired{opacity:.74;filter:grayscale(.38) blur(.5px)}
+.sticky.expired .s-text{opacity:.88}
 .sticky.expired:hover{opacity:1;filter:none}
 .sticky.expired:hover .s-text{opacity:1}
 

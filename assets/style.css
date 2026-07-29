@@ -504,13 +504,16 @@ body.love-open .love-dot{
 .love-head{margin-top:8px;margin-bottom:10px;justify-content:flex-end}
 
 /* ========== 拉绳 / 收起按钮 / 撕下阅读卡 ========== */
-/* 拉绳：固定在底部居中，拖一下把封面拉上去露出便签墙 */
-.sticky-rope{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:6;display:none;align-items:center;gap:9px;padding:9px 18px;border:1px solid var(--line);background:linear-gradient(180deg,#fff,#ffe9f0);border-radius:30px;box-shadow:0 8px 20px rgba(160,100,120,.28),inset 0 1px 0 rgba(255,255,255,.7);cursor:grab;touch-action:none;color:var(--accent-deep);font-family:var(--hand);font-size:15px;letter-spacing:.06em;transition:transform .2s,box-shadow .2s}
-body.home .sticky-rope{display:inline-flex}
+/* 拉绳：从右上角垂下的绳子，点一下把封面拉上去露出便签墙（position:fixed 故常驻顶部，页面滚动也不丢失） */
+.sticky-rope{position:fixed;top:58px;right:20px;z-index:6;display:none;flex-direction:column;align-items:center;width:36px;padding:0;border:none;background:none;cursor:pointer;touch-action:manipulation}
+body.home .sticky-rope{display:flex}
 body.wall-open .sticky-rope{display:none}
-.sticky-rope:active{cursor:grabbing}
-.sticky-rope:hover{transform:translateX(-50%) translateY(-2px);box-shadow:0 12px 26px rgba(160,100,120,.34)}
-.sticky-rope .rope-knot{width:14px;height:14px;border-radius:50%;background:var(--accent);box-shadow:inset 0 0 0 3px rgba(255,255,255,.65),0 1px 3px rgba(120,80,100,.4)}
+.sticky-rope .rope-line{width:3px;height:84px;background:linear-gradient(180deg,rgba(160,100,120,.55),rgba(160,100,120,.12));border-radius:3px;transform-origin:top center;transition:height .25s ease}
+.sticky-rope .rope-handle{width:28px;height:28px;margin-top:-3px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#fff,#e58aa9 72%);box-shadow:0 5px 12px rgba(160,100,120,.4),inset 0 1px 2px rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;transition:transform .2s ease}
+.sticky-rope .rope-ring{width:11px;height:11px;border-radius:50%;border:2px solid rgba(255,255,255,.9)}
+.sticky-rope:hover .rope-handle{transform:scale(1.12) rotate(8deg)}
+.sticky-rope:active .rope-line{height:96px}
+.sticky-rope:active .rope-handle{transform:scale(1.05) translateY(8px)}
 /* 收起按钮：墙展开时出现在底部 */
 .wall-close{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:7;display:none;padding:9px 20px;border:1px solid var(--line);background:var(--card);color:var(--accent-deep);border-radius:30px;font-family:var(--hand);font-size:15px;letter-spacing:.06em;cursor:pointer;box-shadow:0 8px 20px rgba(160,100,120,.28)}
 body.wall-open .wall-close{display:inline-block}

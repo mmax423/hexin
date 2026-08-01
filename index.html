@@ -10,13 +10,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- 高德地图 JS API 2.0 会在 app.js 中按 config.js 里的 AMAP_KEY / AMAP_SECURITY 动态加载；未配置时地图提示申请 -->
   <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
   <!-- 未连接云端时的安全提示（仅本地模式出现，部署前请先配置 config.js） -->
   <div class="local-warn" id="localWarn" hidden>
-    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-07-29-ghpages-v20]</b></span>
+    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-08-01-ghpages-v23]</b></span>
     <button id="localWarnClose" aria-label="关闭">×</button>
   </div>
   <script>
@@ -278,8 +278,7 @@
   <div class="sticky-layer" id="stickyLayer" aria-hidden="true"></div>
   <!-- 拉绳：从右上角垂下的绳子，点一下把封面拉上去，露出整面便签墙 -->
   <button class="sticky-rope" id="stickyRope" aria-label="拉开看便签墙" aria-expanded="false" title="拉开看便签墙">
-    <span class="rope-line"></span>
-    <span class="rope-handle" aria-hidden="true"><span class="rope-ring"></span></span>
+    <img src="assets/images/rope.jpg" alt="拉开看便签墙" draggable="false">
   </button>
   <!-- 墙展开后的收起按钮 -->
   <button class="wall-close" id="wallClose" aria-label="放下便签墙">↓ 放下墙</button>
@@ -392,7 +391,6 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="assets/vendor/gsap.min.js"></script>
   <script src="assets/config.js"></script>
   <script src="assets/store.js"></script>

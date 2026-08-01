@@ -17,6 +17,6 @@
  * 想改进入密码时，前端这里和后端环境变量都要改且保持一致。
  * ============================================================ */
 window.APP_CONFIG = {
-  API_BASE: 'https://hexin-diary.netlify.app/api',
+  API_BASE: 'https://tooth-d2gr87yw44bc61b7-1457042902.ap-shanghai.app.tcloudbase.com/api',
   APP_PASSWORD: 'hearts'
 };

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>合心</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet" />
+  <!-- 高德地图 JS API 2.0 会在 app.js 中按 config.js 里的 AMAP_KEY / AMAP_SECURITY 动态加载；未配置时地图提示申请 -->
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <!-- 未连接云端时的安全提示（仅本地模式出现，部署前请先配置 config.js） -->
+  <div class="local-warn" id="localWarn" hidden>
+    <span>⚠ 本地预览模式：云端暂时连不上，当前内容仅存于本机浏览器，换设备 / 清缓存即丢失，且无法与 TA 共享。网络恢复后重新进入即可切回云端。<b style="color:#9c2b4a">[页面版本：2026-08-01-ghpages-v23]</b></span>
+    <button id="localWarnClose" aria-label="关闭">×</button>
+  </div>
+  <script>
+    // 全局错误兜底：任何脚本出错都显示出来，避免默默打不开
+    window.addEventListener('error', function (e) {
+      try {
+        var d = document.getElementById('errbar');
+        if (!d) {
+          d = document.createElement('div');
+          d.id = 'errbar';
+          d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b03a5b;color:#fff;font-size:12px;line-height:1.6;padding:10px 14px;white-space:pre-wrap;font-family:monospace';
+          (document.body || document.documentElement).appendChild(d);
+        }
+        d.textContent = '⚠ 页面脚本出错：' + (e.message || e.error) + (e.filename ? ('  (' + String(e.filename).split('/').pop() + ':' + e.lineno + ')') : '');
+      } catch (_) {}
+    });
+  </script>
+  <div class="glow-orbs" aria-hidden="true">
+    <span class="orb a"></span>
+    <span class="orb b"></span>
+    <span class="orb c"></span>
+  </div>
+
+  <!-- ========== 登录遮罩 ========== -->
+  <div class="auth-mask" id="authMask">
+    <div class="auth-card">
+      <div class="auth-label">OUR DIARY</div>
+      <div class="auth-title-row">
+        <h1 class="auth-title">合心</h1>
+        <div class="auth-avatar">
+          <img src="assets/images/avatar.png" alt="她的虚拟形象" />
+        </div>
+      </div>
+      <p class="auth-sub" id="authSub">弥散在这儿的罗曼蒂克</p>
+      <div class="auth-form" id="authForm">
+        <input type="password" id="authPassword" class="bare" placeholder="进入密码" autocomplete="current-password" />
+        <p class="auth-err" id="authErr"></p>
+        <button class="link strong" id="authBtn">进入</button>
+      </div>
+      <div class="auth-setup" id="authSetup" hidden>
+        <p>还没部署到云端。请按 <code>deploy-guide-netlify.md</code> 把项目推到 GitHub 并接入 Netlify，再刷新本页（部署后无需手动填任何密钥）。</p>
+      </div>
+    </div>
+  </div>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="wordmark" id="brandBtn">合心</a>
+      <nav class="nav-links">
+        <a href="#" data-view="diary" class="nav-link">日记</a>
+        <a href="#" data-view="notes" class="nav-link">随笔</a>
+        <a href="#" data-view="calendar" class="nav-link">日历</a>
+        <a href="#" data-view="places" class="nav-link">足迹</a>
+        <a href="#" data-view="settings" class="nav-link mgmt-only">设置</a>
+      </nav>
+      <div class="nav-right">
+        <span class="nav-days" id="navDays"></span>
+        <button class="link mgmt-toggle" id="mgmtToggle">编辑</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ========== 封面 ========== -->
+    <section class="view active" id="view-index">
+      <div id="coverPanel">
+        <div class="cover">
+          <div class="cover-main">
+
+            <!-- 中间 -->
+            <div class="cover-center">
+              <div class="cover-label">Our Diary</div>
+              <div class="cover-title-row">
+                <h1 class="cover-names" id="coverNames">合心</h1>
+                <img class="cover-avatar" src="assets/images/avatar.png" alt="她的虚拟形象" />
+              </div>
+              <div class="cover-days" id="coverDays"></div>
+              <p class="cover-en">Forever &amp; Always</p>
+              <p class="cover-sub" id="coverSub"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="index-list">
+          <button class="joy-reopen" id="joyReopen" hidden aria-label="今日喜事">
+            <img src="assets/images/pin.png" alt="今日喜事" width="28" height="28">
+          </button>
+          <a class="index-row" data-goto="diary">
+            <span class="index-title">日记</span>
+            <span class="index-meta" id="idxDiary">—</span>
+          </a>
+          <a class="index-row" data-goto="notes">
+            <span class="index-title">随笔</span>
+            <span class="index-meta" id="idxNotes">—</span>
+          </a>
+          <a class="index-row" data-goto="calendar">
+            <span class="index-title">日历</span>
+            <span class="index-meta" id="idxCal">—</span>
+          </a>
+          <a class="index-row" data-goto="places">
+            <span class="index-title">足迹</span>
+            <span class="index-meta" id="idxPlaces">—</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 日记 ========== -->
+    <section class="view" id="view-diary">
+      <div class="page-head">
+        <h2 class="page-title">日记</h2>
+        <button class="love-dot" id="loveEnterBtn" type="button" title="私密" aria-label="私密"></button>
+        <button class="link mgmt-only" id="addDiaryBtn">写</button>
+      </div>
+
+      <div id="diaryList" class="archive"></div>
+
+      <!-- 私密专栏（点击小圆点后展开，无标题，仅内容 + 发布） -->
+      <div class="love-view" id="loveView" hidden>
+        <div class="page-head love-head">
+          <button class="link mgmt-only" id="addLoveBtn">发布</button>
+        </div>
+        <div id="loveList" class="archive love-archive"></div>
+      </div>
+    </section>
+
+    <!-- ========== 随笔 ========== -->
+    <section class="view" id="view-notes">
+      <div class="page-head">
+        <h2 class="page-title">随笔</h2>
+        <span class="page-note">此刻想到什么，就留下一句。</span>
+      </div>
+      <div class="composer">
+        <textarea id="noteInput" rows="2" placeholder="写下一句话…"></textarea>
+        <div class="composer-foot">
+          <span class="composer-hint" id="noteHint"></span>
+          <button class="link" id="noteSave">留存</button>
+        </div>
+      </div>
+      <div id="notesList" class="notes-stream"></div>
+    </section>
+
+    <!-- ========== 日历 ========== -->
+    <section class="view" id="view-calendar">
+      <div class="page-head">
+        <h2 class="page-title">日历</h2>
+        <span class="page-note" id="calTogether"></span>
+      </div>
+      <div class="cal">
+        <div class="cal-head">
+          <button class="cal-nav" id="calPrev" aria-label="上一月">‹</button>
+          <div class="cal-month" id="calMonth"></div>
+          <button class="cal-nav" id="calNext" aria-label="下一月">›</button>
+        </div>
+        <div class="cal-weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-legend">
+          <span class="lg"><i class="dot d-diary"></i>日记</span>
+          <span class="lg"><i class="dot d-note"></i>随笔</span>
+          <span class="lg"><i class="dot d-place"></i>足迹</span>
+          <span class="lg"><i class="anchor-mark"></i>起点</span>
+        </div>
+      </div>
+
+      <!-- 日详情抽屉 -->
+      <div class="day-panel" id="dayPanel" aria-hidden="true">
+        <div class="day-panel-inner">
+          <div class="day-panel-head">
+            <span id="dayPanelTitle"></span>
+            <button class="x" id="dayPanelClose" aria-label="关闭">×</button>
+          </div>
+          <div class="day-panel-body" id="dayPanelBody"></div>
+          <div class="day-panel-foot mgmt-only" id="dayPanelFoot"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 足迹 ========== -->
+    <section class="view" id="view-places">
+      <div class="page-head">
+        <h2 class="page-title">足迹</h2>
+        <button class="link mgmt-only" id="addPlaceBtn">添加</button>
+      </div>
+      <div id="map" class="map-box"></div>
+      <div id="placesList" class="archive subtle"></div>
+    </section>
+
+    <!-- ========== 设置 ========== -->
+    <section class="view" id="view-settings">
+      <div class="page-head"><h2 class="page-title">设置</h2></div>
+      <div class="settings">
+        <div class="field">
+          <label>我的称呼</label>
+          <input type="text" id="setNameA" placeholder="例如：小宇" />
+        </div>
+        <div class="field">
+          <label>TA 的称呼</label>
+          <input type="text" id="setNameB" placeholder="例如：小鹿" />
+        </div>
+        <div class="field">
+          <label>在一起的日子</label>
+          <input type="date" id="setSince" />
+        </div>
+        <div class="settings-actions">
+          <button class="link" id="saveSettingsBtn">保存设置</button>
+          <span class="rule"></span>
+          <button class="link" id="exportBtn">导出备份</button>
+          <button class="link" id="importBtn">恢复备份</button>
+          <input type="file" id="importFile" accept="application/json" hidden />
+          <span class="rule"></span>
+          <button class="link" id="seedBtn">载入示例</button>
+          <button class="link danger" id="resetBtn">清空全部</button>
+        </div>
+        <div class="settings-actions" style="margin-top:18px">
+          <button class="link" id="logoutBtn">退出登录</button>
+          <span class="settings-hint" id="migrateHint" hidden>
+            检测到本机旧数据，<button class="link strong" id="migrateBtn">一键上传到云端</button>
+          </span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 今日喜事浮动框：提升为 body 直接子级，position:fixed 相对视口，彻底避免祖先 .view 动画 transform 干扰拖拽坐标 -->
+  <div class="joy-panel" id="joyPanel">
+    <div class="joy-head">
+      <span class="joy-title">今日喜事</span>
+      <button class="joy-hide" id="joyHide" title="收起面板" aria-label="收起">—</button>
+    </div>
+    <div class="joy-body">
+      <textarea id="joyText" class="joy-text" placeholder="今天的小确幸…"></textarea>
+      <div class="joy-tools">
+        <button class="joy-img" id="joyImgBtn" title="贴图" aria-label="贴图">📎</button>
+        <button class="joy-save" id="joySaveBtn">贴到随笔</button>
+      </div>
+      <input type="file" id="joyFile" accept="image/*" hidden>
+      <div class="joy-preview" id="joyPreview"></div>
+    </div>
+    <div class="joy-divider"><span>便签 · 随手贴</span></div>
+    <button class="wall-add" id="stickyAddBtn">+ 贴一张便签</button>
+    <div class="sticky-form" id="stickyForm" hidden>
+      <textarea id="stickyText" class="sticky-input" placeholder="写张便签，会直接贴到背景上…" maxlength="70"></textarea>
+      <div class="sticky-colors">
+        <button data-color="pink" class="col pink sel" aria-label="粉色"></button>
+        <button data-color="yellow" class="col yellow" aria-label="黄色"></button>
+        <button data-color="blue" class="col blue" aria-label="蓝色"></button>
+        <button data-color="green" class="col green" aria-label="绿色"></button>
+        <button data-color="lavender" class="col lavender" aria-label="紫色"></button>
+      </div>
+      <div class="sticky-actions">
+        <button class="link" id="stickyCancel">取消</button>
+        <button class="joy-save" id="stickySaveBtn">贴上</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 便签墙（真背景墙：body 直接子级、fixed，避免被 .view 动画 transform 干扰） -->
+  <div class="sticky-layer" id="stickyLayer" aria-hidden="true"></div>
+  <!-- 拉绳：从右上角垂下的绳子，点一下把封面拉上去，露出整面便签墙 -->
+  <button class="sticky-rope" id="stickyRope" aria-label="拉开看便签墙" aria-expanded="false" title="拉开看便签墙">
+    <img src="assets/images/rope.jpg" alt="拉开看便签墙" draggable="false">
+  </button>
+  <!-- 墙展开后的收起按钮 -->
+  <button class="wall-close" id="wallClose" aria-label="放下便签墙">↓ 放下墙</button>
+  <!-- 撕下阅读卡（独立元素，不扰动墙上布局） -->
+  <div class="tear-card" id="tearCard" hidden>
+    <button class="tc-close" aria-label="放回">放回墙上</button>
+    <div class="tc-text"></div>
+  </div>
+
+  <footer class="footer">
+    <span id="year"></span> · 合心
+  </footer>
+
+  <!-- 日记编辑 -->
+  <div class="mask" id="diaryModal">
+    <div class="sheet">
+      <div class="sheet-head"><span id="diaryModalTitle">写日记</span><button class="x" data-close="diaryModal">×</button></div>
+      <div class="sheet-body">
+        <input type="text" id="dTitle" class="bare title-input" placeholder="标题" />
+        <div class="row2">
+          <input type="date" id="dDate" class="bare" />
+          <input type="text" id="dMood" class="bare" placeholder="心情（一句话，可留空）" />
+        </div>
+        <textarea id="dContent" class="bare body-input" rows="10" placeholder="此刻，想写些什么…"></textarea>
+        <div class="upload">
+          <button type="button" class="link" id="dPick">附上图片</button>
+          <input type="file" id="dFiles" accept="image/*" multiple hidden />
+          <div class="thumbs" id="dThumbs"></div>
+        </div>
+      </div>
+      <div class="sheet-foot">
+        <button class="link" data-close="diaryModal">取消</button>
+        <button class="link strong" id="dSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 足迹编辑 -->
+  <div class="mask" id="placeModal">
+    <div class="sheet">
+      <div class="sheet-head"><span id="placeModalTitle">添加足迹</span><button class="x" data-close="placeModal">×</button></div>
+      <div class="sheet-body">
+        <input type="text" id="pName" class="bare" placeholder="地点名称" />
+        <div class="field-cat">
+          <label>类型（标记图标）</label>
+          <div class="cat-chips" id="pCats"></div>
+        </div>
+        <input type="text" id="pSearch" class="bare" placeholder="搜索地点，如：上海迪士尼" />
+        <button type="button" class="link" id="pSearchBtn">定位</button>
+        <div class="row2">
+          <input type="text" id="pLat" class="bare" placeholder="纬度" />
+          <input type="text" id="pLng" class="bare" placeholder="经度" />
+        </div>
+        <input type="text" id="pAddress" class="bare" placeholder="地址 / 备注" />
+        <input type="date" id="pDate" class="bare" />
+        <textarea id="pNote" class="bare body-input" rows="3" placeholder="那天的天气、心情…"></textarea>
+        <div class="upload">
+          <button type="button" class="link" id="pPick">附上图片</button>
+          <input type="file" id="pFiles" accept="image/*" multiple hidden />
+          <div class="thumbs" id="pThumbs"></div>
+        </div>
+      </div>
+      <div class="sheet-foot">
+        <button class="link" data-close="placeModal">取消</button>
+        <button class="link strong" id="pSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 图片查看 -->
+  <div class="mask" id="imgModal">
+    <div class="img-wrap">
+      <button class="x" data-close="imgModal">×</button>
+      <img id="imgBig" src="" alt="" />
+    </div>
+  </div>
+
+  <!-- 阅读 / 详情 -->
+  <div class="mask" id="detailModal">
+    <div class="sheet read">
+      <div class="sheet-head"><span id="detailTitle"></span><button class="x" data-close="detailModal">×</button></div>
+      <div class="sheet-body" id="detailBody"></div>
+      <div class="sheet-foot" id="detailFoot"></div>
+    </div>
+  </div>
+
+  <!-- 私密专栏编辑 -->
+  <div class="mask" id="loveModal">
+    <div class="sheet">
+      <div class="sheet-head"><span id="loveModalTitle">发布</span><button class="x" data-close="loveModal">×</button></div>
+      <div class="sheet-body">
+        <input type="text" id="lvTitle" class="bare title-input" placeholder="标题（可留空）" />
+        <div class="row2">
+          <input type="date" id="lvDate" class="bare" />
+          <input type="text" id="lvMood" class="bare" placeholder="心情（可留空）" />
+        </div>
+        <textarea id="lvContent" class="bare body-input" rows="10" placeholder="想只对一个人说的话…"></textarea>
+        <div class="upload">
+          <button type="button" class="link" id="lvPick">附上图片（可选）</button>
+          <input type="file" id="lvFiles" accept="image/*" multiple hidden />
+          <div class="thumbs" id="lvThumbs"></div>
+        </div>
+      </div>
+      <div class="sheet-foot">
+        <button class="link" data-close="loveModal">取消</button>
+        <button class="link strong" id="lvSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="assets/vendor/gsap.min.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/store.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

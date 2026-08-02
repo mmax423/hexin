@@ -1,58 +1,78 @@
 /* ============================================================
- * store.js — 数据层（Netlify 无服务器函数 + GitHub 私有仓 + 本地降级）
+ * store.js — 数据层（腾讯云 CloudBase 云数据库 Web SDK + 本地降级）
  * ------------------------------------------------------------
- *  - 部署到 Netlify 后，前端调用同域的 /api（一个无服务器函数），
- *    函数再把数据读写代理到你的 GitHub 私有仓库 hexin-data。
- *    GitHub 令牌只存在于 Netlify 服务器环境变量，前端不暴露任何密钥。
- *  - 连不上 /api（例如本地双击打开 html）→ 自动降级为 localStorage，
- *    立即能看能用，但换设备/清缓存会丢，且无法与 TA 共享。
+ *  - 前端用 @cloudbase/js-sdk 直连云数据库（免费版即可），
+ *    绕过免费版 HTTP 云函数网关的 INVALID_ENV 限制。
+ *  - 所有集合数据统一存进一个集合 `hexin_kv`，每个文档 _id 即集合名
+ *    （diary / notes / places / love / stickers / settings），
+ *    文档体内用 { v: 数据 } 承载（数组或 settings 对象）。
+ *  - 连不上云数据库（SDK 未加载 / 匿名登录未开 / 集合未建）→ 自动降级
+ *    为 localStorage，立即能看能用，但换设备/清缓存会丢，且无法共享。
  *  - 两者对外 API 完全一致，app.js 无需感知差异。
- *  - 图片采用「内联 base64」直接存进 JSON，免去图床与索引依赖。
+ *  - 图片采用「内联 base64」直接存进数据，免去图床与索引依赖。
  * ============================================================ */
 (function (global) {
   'use strict';
 
   const CFG = global.APP_CONFIG || {};
-  const API_BASE = (CFG.API_BASE || '/api').replace(/\/+$/, '');
   const APP_PASSWORD = CFG.APP_PASSWORD || 'hearts';
 
-  let useCloud = false;   // 部署在 Netlify（有 /api 函数）→ 云端模式
-  let useLocal = true;    // 没连上 /api（本地双击）→ 本地降级
-  const configured = true; // 已内置云端支持，部署后自动启用，无需手动填密钥
+  let useCloud = false;   // 连上 CloudBase 云数据库 → 云端模式
+  let useLocal = true;    // 没连上云数据库 → 本地降级
+  const configured = true; // 已内置云端支持（CloudBase Web SDK），部署后自动启用
 
-  /* ---------- 云端 API（Netlify Function）---------- */
+  /* ---------- 云端 API（CloudBase 云数据库 · Web SDK 直连）---------- */
+  const CLOUDBASE_ENV = CFG.CLOUDBASE_ENV || 'tooth-d2gr87yw44bc61b7';
+  const KV = 'hexin_kv';            // 统一存数据的集合名
+  let app = null, db = null;
+
+  // 主 CDN(res.cloudbase.net) 未加载时，用 jsDelivr ESM 兜底
+  async function ensureSDK() {
+    if (global.cloudbase) return true;
+    if (global.tcb) { global.cloudbase = global.tcb; return true; }   // 兼容旧版全局名
+    try {
+      const m = await import('https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@3.7.0/+esm');
+      global.cloudbase = m.default || m;
+      return true;
+    } catch (e) { return false; }
+  }
+
+  async function initCloud() {
+    if (!(await ensureSDK())) { global.__probeError = 'CloudBase SDK 未加载（CDN 被拦截？）'; return false; }
+    try {
+      app = global.cloudbase.init({ env: CLOUDBASE_ENV });
+      db = app.database();
+      // 匿名登录（免费版需在控制台「登录授权」开启匿名登录）
+      try { await app.auth().signInAnonymously(); } catch (_) {}
+      // 真正探测：读一次集合，确认网关/数据库可用（集合需先在控制台建好）
+      await db.collection(KV).limit(1).get();
+      return true;
+    } catch (e) {
+      global.__probeError = 'CloudBase 初始化失败: ' + (e && e.message ? e.message : e);
+      return false;
+    }
+  }
+
+  async function cbGetDoc(key) {
+    try {
+      const res = await db.collection(KV).doc(key).get();
+      if (res && res.data && res.data.length) return res.data[0];
+    } catch (_) {}
+    return null;
+  }
+  async function cbSetDoc(key, value) {
+    await db.collection(KV).doc(key).set(value);
+  }
   async function netGet(name) {
-    const r = await fetch(API_BASE + '?c=' + encodeURIComponent(name), {
-      headers: { 'x-password': APP_PASSWORD }
-    });
-    if (!r.ok) throw new Error('云端读取失败(' + r.status + ')');
-    const j = await r.json();
-    return (j && 'data' in j) ? j.data : null;
+    const d = await cbGetDoc(name);
+    return d ? d.v : null;
   }
   async function netSet(name, value) {
-    const r = await fetch(API_BASE + '?c=' + encodeURIComponent(name), {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-password': APP_PASSWORD },
-      body: JSON.stringify({ data: value })
-    });
-    if (!r.ok) throw new Error('云端写入失败(' + r.status + ')');
+    await cbSetDoc(name, { v: value });
     return true;
   }
   async function probeCloud() {
-    try {
-      const r = await fetch(API_BASE + '?c=settings', { headers: { 'x-password': APP_PASSWORD } });
-      if (!r.ok) {
-        global.__probeError = 'HTTP ' + r.status + ' ' + (r.statusText || '');
-        try {
-          const t = await r.clone().text();
-          global.__probeError += ' | ' + t.slice(0, 120);
-        } catch (_) {}
-      }
-      return r.ok;
-    } catch (e) {
-      global.__probeError = String(e && e.message ? e.message : e);
-      return false;
-    }
+    return await initCloud();
   }
 
   /* ---------- 本地存储 helper ---------- */

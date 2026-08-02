@@ -212,8 +212,8 @@ body.authed .auth-mask{display:none}
 .joy-preview{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
 .joy-preview img{height:54px;width:54px;object-fit:cover;border:3px solid #fff;box-shadow:0 3px 8px rgba(160,100,120,.22);transform:rotate(-2deg)}
 
-/* 便签背景墙：真 · 固定层（body 直接子级），仅首页可见；兼作 3D 透视容器 */
-.sticky-layer{position:fixed;inset:0;z-index:3;pointer-events:none;overflow:hidden;display:none;perspective:1200px;transform-style:preserve-3d}
+/* 便签背景墙：真 · 固定层（body 直接子级），仅首页可见；滚动时钉死在视口，不随内容移动 */
+.sticky-layer{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:3;pointer-events:none;overflow:hidden;display:none;perspective:1200px;transform-style:preserve-3d;transform:translateZ(0)}
 body.home .sticky-layer{display:block}
 /* 封面内容包层：拉绳上拉时整块滑出，露出背后的墙 */
 #coverPanel{position:relative;z-index:2;transform-origin:top center;will-change:transform}
@@ -335,18 +335,8 @@ body.mgmt .sticky .del{display:flex}
 
 /* 地图 —— 旅行手账里的地图页 */
 .map-box{height:420px;border:1px solid var(--line);margin-bottom:36px;background:var(--paper-2);border-radius:3px;overflow:hidden;box-shadow:0 2px 0 rgba(160,100,120,.05),0 14px 36px rgba(160,100,120,.15)}
-.leaflet-container{background:var(--paper-2);font-family:var(--sans)}
-.leaflet-popup-content-wrapper{border-radius:3px;box-shadow:0 12px 36px rgba(160,100,120,.25);border:1px solid var(--line)}
-.leaflet-popup-content{margin:16px 18px;font-family:var(--serif)}
-.pin{width:32px;height:32px;border-radius:50%;background:#fff;border:2px solid var(--accent);box-shadow:0 0 0 4px rgba(210,123,160,.14),0 4px 14px rgba(150,75,110,.3);display:flex;align-items:center;justify-content:center;position:relative;font-size:16px;line-height:1}
-.pin-emoji{display:block}
-.pin::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:1px solid var(--accent);animation:pulse 2.6s ease-out infinite}
-@keyframes pulse{0%{transform:scale(.5);opacity:.75}100%{transform:scale(2.4);opacity:0}}
-.pin-pop-title{font-size:16px;font-weight:500;letter-spacing:.04em;margin-bottom:2px}
-.pin-pop-sub{font-family:var(--sans);font-size:12px;color:var(--ink-soft);margin-bottom:8px}
-.pin-pop-links{display:flex;gap:12px;flex-wrap:wrap}
-.pin-pop-links a{font-family:var(--sans);font-size:12px;color:var(--accent-deep);text-decoration:none;letter-spacing:.04em;border-bottom:1px solid transparent;transition:border-color .3s}
-.pin-pop-links a:hover{border-color:var(--accent-deep)}
+.map-box .tmap-container{width:100%;height:100%;font-family:var(--sans)}
+.map-hint{display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink-soft);font-size:13px;letter-spacing:.04em;text-align:center;padding:24px}
 
 /* 日历 —— 手账月历页 */
 .cal{max-width:var(--maxw)}
@@ -505,15 +495,14 @@ body.love-open .love-dot{
 
 /* ========== 拉绳 / 收起按钮 / 撕下阅读卡 ========== */
 /* 拉绳：从右上角垂下的绳子，点一下把封面拉上去露出便签墙（position:fixed 故常驻顶部，页面滚动也不丢失） */
-.sticky-rope{position:fixed;top:58px;right:20px;z-index:6;display:none;flex-direction:column;align-items:center;width:36px;padding:0;border:none;background:none;cursor:pointer;touch-action:manipulation}
-body.home .sticky-rope{display:flex}
+/* 拉绳：从右上角垂下的真实绳子图片，点一下把封面拉上去露出便签墙（position:fixed 常驻顶部，滚动不丢） */
+.sticky-rope{position:fixed;top:58px;right:18px;z-index:6;display:none;width:44px;height:auto;padding:0;border:none;background:none;cursor:pointer;touch-action:manipulation;filter:drop-shadow(0 4px 8px rgba(120,80,90,.35));transition:filter .25s ease,transform .25s ease;transform-origin:top center}
+body.home .sticky-rope{display:block}
 body.wall-open .sticky-rope{display:none}
-.sticky-rope .rope-line{width:3px;height:84px;background:linear-gradient(180deg,rgba(160,100,120,.55),rgba(160,100,120,.12));border-radius:3px;transform-origin:top center;transition:height .25s ease}
-.sticky-rope .rope-handle{width:28px;height:28px;margin-top:-3px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#fff,#e58aa9 72%);box-shadow:0 5px 12px rgba(160,100,120,.4),inset 0 1px 2px rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;transition:transform .2s ease}
-.sticky-rope .rope-ring{width:11px;height:11px;border-radius:50%;border:2px solid rgba(255,255,255,.9)}
-.sticky-rope:hover .rope-handle{transform:scale(1.12) rotate(8deg)}
-.sticky-rope:active .rope-line{height:96px}
-.sticky-rope:active .rope-handle{transform:scale(1.05) translateY(8px)}
+.sticky-rope img{width:100%;height:auto;display:block;pointer-events:none;mix-blend-mode:multiply;transform-origin:top center;transition:transform .25s ease}
+.sticky-rope:hover{filter:drop-shadow(0 6px 12px rgba(120,80,90,.45))}
+.sticky-rope:hover img{transform:scale(1.04)}
+.sticky-rope:active img{transform:scale(1.02) rotate(1deg)}
 /* 收起按钮：墙展开时出现在底部 */
 .wall-close{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:7;display:none;padding:9px 20px;border:1px solid var(--line);background:var(--card);color:var(--accent-deep);border-radius:30px;font-family:var(--hand);font-size:15px;letter-spacing:.06em;cursor:pointer;box-shadow:0 8px 20px rgba(160,100,120,.28)}
 body.wall-open .wall-close{display:inline-block}

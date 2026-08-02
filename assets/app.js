@@ -15,7 +15,7 @@
     mgmt: false,
     diaryEdit: null, draftDiaryImgs: [],
     placeEdit: null, draftPlaceImgs: [], placeCat: 'other',
-    map: null, mapReady: false,
+    map: null, mapReady: false, mapMarkers: [], mapSdkLoading: null, mapSdkWarned: false,
     calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), dayKey: null,
     loveEdit: null, draftLoveImgs: [],
     timerInterval: null, joyImg: null, stickyColor: 'pink'
@@ -489,51 +489,84 @@
     $$('.cal-cell.sel').forEach((c) => c.classList.remove('sel'));
   }
 
-  /* ---------- 足迹地图 ---------- */
-  function initMapIfNeeded() {
-    if (typeof L === 'undefined') { toast('地图需联网加载'); return; }
-    if (state.mapReady) { setTimeout(() => state.map.invalidateSize(), 60); renderMapMarkers(); return; }
-    const map = L.map('map', { scrollWheelZoom: false }).setView([30, 115], 4);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 18, attribution: '&copy; OpenStreetMap &copy; CARTO'
-    }).addTo(map);
-    state.map = map; state.mapReady = true;
-    setTimeout(() => map.invalidateSize(), 60);
+  /* ---------- 足迹地图（高德地图 JS API 2.0，国内合规） ---------- */
+  function amapKey() { return window.APP_CONFIG && window.APP_CONFIG.AMAP_KEY; }
+  function amapSecurity() { return window.APP_CONFIG && window.APP_CONFIG.AMAP_SECURITY; }
+  function isPlaceholderKey(k) { return !k || /replace this placeholder|YOUR_|请申请|申请/.test(k); }
+
+  function loadMapSDK() {
+    if (window._AMap) return Promise.resolve(window._AMap);
+    if (state.mapSdkLoading) return state.mapSdkLoading;
+    const key = amapKey(), sec = amapSecurity();
+    if (isPlaceholderKey(key) || isPlaceholderKey(sec)) {
+      // 占位符时只提示一次，不重复报错
+      if (!state.mapSdkWarned) { state.mapSdkWarned = true; toast('地图需先配置高德地图 Key'); }
+      return Promise.resolve(null);
+    }
+    state.mapSdkLoading = new Promise((resolve) => {
+      window._AMapSecurityConfig = { securityJsCode: sec };
+      const s = document.createElement('script');
+      s.src = 'https://webapi.amap.com/loader.js';
+      s.onload = () => {
+        window.AMapLoader.load({ key, version: '2.0', plugins: ['AMap.PlaceSearch', 'AMap.Geocoder'] })
+          .then((AMap) => { window._AMap = AMap; resolve(AMap); })
+          .catch((e) => { console.error(e); toast('高德地图 JS API 加载失败'); resolve(null); });
+      };
+      s.onerror = () => { toast('高德地图 SDK 加载失败（检查网络）'); resolve(null); };
+      document.head.appendChild(s);
+    });
+    return state.mapSdkLoading;
+  }
+
+  function makePinSvg(icon) {
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='32' height='40' viewBox='0 0 32 40'><path d='M16 0C7.2 0 0 7.2 0 16c0 12 16 24 16 24s16-12 16-24C32 7.2 24.8 0 16 0z' fill='#D27BA0'/><circle cx='16' cy='16' r='8' fill='#fff'/><text x='16' y='21' text-anchor='middle' dominant-baseline='middle' font-size='11'>${icon}</text></svg>`;
+    return "data:image/svg+xml," + encodeURIComponent(svg);
+  }
+
+  async function initMapIfNeeded() {
+    const ok = await loadMapSDK();
+    const box = document.getElementById('map');
+    if (!ok) {
+      if (box) box.innerHTML = '<div class="map-hint">地图需要先配置高德地图 Key 与 安全密钥<br>请在 assets/config.js 中替换 AMAP_KEY / AMAP_SECURITY</div>';
+      return;
+    }
+    if (state.mapReady) { renderMapMarkers(); return; }
+    state.map = new ok.Map('map', { zoom: 4, center: [115, 30], viewMode: '2D' });
+    state.mapReady = true;
     renderMapMarkers();
   }
+
   function renderMapMarkers() {
-    if (!state.map) return;
-    state.map.eachLayer((l) => { if (l instanceof L.Marker) state.map.removeLayer(l); });
+    const AMap = window._AMap;
+    if (!state.mapReady || !AMap) return;
+    if (state.mapMarkers && state.mapMarkers.length) { state.mapMarkers.forEach((m) => state.map.remove(m)); state.mapMarkers = []; }
     const places = Store.getPlaces().filter((p) => p.lat && p.lng);
-    const bounds = [];
+    if (!places.length) { state.map.setZoomAndCenter(4, [115, 30]); return; }
+    const markers = [];
     places.forEach((p) => {
       const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
       if (isNaN(lat) || isNaN(lng)) return;
-      bounds.push([lat, lng]);
-      const links = mapLinks(p);
       const cat = Store.catOf(p.cat);
-      L.marker([lat, lng], { icon: L.divIcon({ className: '', html: `<div class="pin"><span class="pin-emoji">${cat.icon}</span></div>`, iconSize: [32, 32], iconAnchor: [16, 16] }) })
-        .addTo(state.map).bindPopup(
-          `<div class="pin-pop-title">${cat.icon} ${esc(p.name)}</div>
-           <div class="pin-pop-sub">${esc(p.address || '')} · ${Store.fmtDate(p.date)}</div>
-           <div class="pin-pop-links">
-             <a href="${links.amap}" target="_blank">高德</a>
-             <a href="${links.baidu}" target="_blank">百度</a>
-             <a href="${links.google}" target="_blank">Google</a>
-             <a href="${links.apple}" target="_blank">Apple</a>
-           </div>`);
+      const m = new AMap.Marker({
+        position: [lng, lat],
+        content: `<img src="${makePinSvg(cat.icon)}" style="width:32px;height:40px;display:block;filter:drop-shadow(0 3px 5px rgba(150,75,110,.45))">`,
+        offset: new AMap.Pixel(-16, -40),
+        map: state.map
+      });
+      m.on('click', () => openRead('place', p.id));
+      markers.push(m);
     });
-    if (bounds.length === 1) state.map.setView(bounds[0], 12);
-    else if (bounds.length > 1) state.map.fitBounds(bounds, { padding: [50, 50] });
+    state.mapMarkers = markers;
+    if (markers.length === 1) { const p = places[0]; state.map.setZoomAndCenter(12, [parseFloat(p.lng), parseFloat(p.lat)]); }
+    else if (markers.length > 1) state.map.setFitView(markers, false, [50, 50, 50, 50]);
   }
+
   function mapLinks(p) {
     const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
     const name = encodeURIComponent(p.name || ''), addr = encodeURIComponent(p.address || '');
     return {
-      amap: `https://uri.amap.com/marker?position=${lng},${lat}&name=${name}&src=ourdiary&coordinate=wgs84&callnative=1`,
-      baidu: `http://api.map.baidu.com/marker?location=${lat},${lng}&title=${name}&content=${addr}&output=html&coord_type=wgs84&src=ourdiary`,
-      google: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,
-      apple: `https://maps.apple.com/?q=${lat},${lng}`
+      amap: `https://uri.amap.com/marker?position=${lng},${lat}&name=${name}&src=ourdiary&callnative=1`,
+      baidu: `http://api.map.baidu.com/marker?location=${lat},${lng}&title=${name}&content=${addr}&output=html&coord_type=gcj02&src=ourdiary`
     };
   }
   function renderPlaces() {
@@ -615,16 +648,21 @@
     if (!q) { toast('先输入地点名'); return; }
     const btn = $('#pSearchBtn'); const old = btn.textContent; btn.textContent = '定位中';
     try {
-      const res = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } });
-      const data = await res.json();
-      if (!data.length) { toast('未找到，可手动填写经纬度'); return; }
-      const item = data[0];
-      $('#pLat').value = parseFloat(item.lat).toFixed(6);
-      $('#pLng').value = parseFloat(item.lon).toFixed(6);
-      if (!$('#pName').value) $('#pName').value = item.name || item.display_name.split(',')[0];
-      if (!$('#pAddress').value) $('#pAddress').value = item.display_name;
-      toast('已定位');
-    } catch (e) { toast('定位失败，可手动填写'); }
+      const AMap = await loadMapSDK();
+      if (!AMap || !AMap.Geocoder) { toast('地图服务未加载，检查 Key 配置'); return; }
+      const geocoder = new AMap.Geocoder({ city: '全国' });
+      geocoder.getLocation(q, (status, result) => {
+        if (status === 'complete' && result.geocodes && result.geocodes.length) {
+          const g = result.geocodes[0];
+          const lng = g.location.lng, lat = g.location.lat;
+          $('#pLng').value = Number(lng).toFixed(6);
+          $('#pLat').value = Number(lat).toFixed(6);
+          if (!$('#pName').value) $('#pName').value = g.formattedAddress || q;
+          if (!$('#pAddress').value) $('#pAddress').value = g.formattedAddress || '';
+          toast('已定位');
+        } else { toast('未找到，可手动填写经纬度'); }
+      });
+    } catch (e) { console.error(e); toast('定位失败，可手动填写'); }
     finally { btn.textContent = old; }
   }
   async function savePlace() {
@@ -682,8 +720,6 @@
         <div class="map-links">
           <a href="${links.amap}" target="_blank">高德地图</a>
           <a href="${links.baidu}" target="_blank">百度地图</a>
-          <a href="${links.google}" target="_blank">Google 地图</a>
-          <a href="${links.apple}" target="_blank">Apple 地图</a>
         </div>`;
     }
     $('#detailBody').innerHTML = html;
@@ -828,12 +864,9 @@
 
     function openWall() {
       const p = document.getElementById('coverPanel');
-      if (g()) {
-        // 绳子先轻轻一拽，再把封面整块上拉滑出，便签墙轻微上浮入场
-        const tl = g().timeline();
-        tl.to(rope.querySelector('.rope-handle'), { y: 10, duration: .12, ease: 'power1.in' })
-          .to(p, { y: '-100%', rotateX: 0, autoAlpha: 0, duration: .6, ease: 'power3.inOut', onComplete: () => { p.style.visibility = 'hidden'; } }, '-=.04');
-        g().fromTo(wall, { y: 30, autoAlpha: .55 }, { y: 0, autoAlpha: 1, duration: .6, ease: 'power3.out' }, '-=.5');
+      if (g() && p) {
+        g().to(p, { y: '-100%', autoAlpha: 0, duration: .55, ease: 'power3.inOut', onComplete: () => { p.style.visibility = 'hidden'; } });
+        g().fromTo(wall, { y: 20, autoAlpha: .55 }, { y: 0, autoAlpha: 1, duration: .5, ease: 'power3.out' }, '-=.4');
       } else if (p) {
         p.style.transform = 'translateY(-100%)';
       }
@@ -845,7 +878,7 @@
       document.body.classList.remove('wall-open');
       rope.setAttribute('aria-expanded', 'false');
       if (p) p.style.visibility = '';
-      if (g() && p) g().to(p, { y: 0, rotateX: 0, autoAlpha: 1, duration: .5, ease: 'power3.inOut' });
+      if (g() && p) g().to(p, { y: 0, autoAlpha: 1, duration: .5, ease: 'power3.inOut' });
       else if (p) p.style.transform = '';
     }
     window.__closeWall = closeWall;
